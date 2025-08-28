@@ -1,0 +1,175 @@
+{% extends "base.html" %}
+
+{% block title %}Dashboard - Unraid Config Guardian{% endblock %}
+
+{% block content %}
+<div class="row mb-4">
+    <div class="col-12">
+        <h1><i class="bi bi-speedometer2"></i> Dashboard</h1>
+        <p class="text-muted">Monitor your Unraid server and manage configuration backups</p>
+    </div>
+</div>
+
+{% if stats.error %}
+<div class="alert alert-danger" role="alert">
+    <i class="bi bi-exclamation-triangle"></i> Error: {{ stats.error }}
+</div>
+{% else %}
+
+<!-- Statistics Cards -->
+<div class="row mb-4">
+    <div class="col-md-3 mb-3">
+        <div class="card card-stat h-100">
+            <div class="card-body text-center">
+                <i class="bi bi-box fs-1 mb-2"></i>
+                <h3>{{ stats.total_containers }}</h3>
+                <p class="mb-0">Total Containers</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3 mb-3">
+        <div class="card bg-success text-white h-100">
+            <div class="card-body text-center">
+                <i class="bi bi-play-circle fs-1 mb-2"></i>
+                <h3>{{ stats.running_containers }}</h3>
+                <p class="mb-0">Running</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3 mb-3">
+        <div class="card bg-info text-white h-100">
+            <div class="card-body text-center">
+                <i class="bi bi-server fs-1 mb-2"></i>
+                <h3>{{ stats.system_info.hostname }}</h3>
+                <p class="mb-0">Hostname</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3 mb-3">
+        <div class="card bg-secondary text-white h-100">
+            <div class="card-body text-center">
+                <i class="bi bi-clock fs-1 mb-2"></i>
+                <h3>{{ stats.system_info.get('unraid_version', 'Unknown') }}</h3>
+                <p class="mb-0">Unraid Version</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Action Buttons -->
+<div class="row mb-4">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header">
+                <h5><i class="bi bi-gear"></i> Quick Actions</h5>
+            </div>
+            <div class="card-body">
+                <button class="btn btn-primary me-2" onclick="startBackup()">
+                    <i class="bi bi-download"></i> Generate Backup Now
+                </button>
+                <a href="/containers" class="btn btn-outline-secondary me-2">
+                    <i class="bi bi-box"></i> View Containers
+                </a>
+                <a href="/backups" class="btn btn-outline-secondary">
+                    <i class="bi bi-archive"></i> View Backups
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- System Information -->
+<div class="row mb-4">
+    <div class="col-md-6">
+        <div class="card h-100">
+            <div class="card-header">
+                <h5><i class="bi bi-info-circle"></i> System Information</h5>
+            </div>
+            <div class="card-body">
+                <table class="table table-sm">
+                    <tr>
+                        <td><strong>Hostname:</strong></td>
+                        <td>{{ stats.system_info.hostname }}</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Unraid Version:</strong></td>
+                        <td>{{ stats.system_info.get('unraid_version', 'Unknown') }}</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Last Scan:</strong></td>
+                        <td>{{ stats.system_info.timestamp[:19] if stats.system_info.timestamp else 'Never' }}</td>
+                    </tr>
+                </table>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-6">
+        <div class="card h-100">
+            <div class="card-header">
+                <h5><i class="bi bi-archive"></i> Last Backup</h5>
+            </div>
+            <div class="card-body">
+                {% if stats.last_backup %}
+                <table class="table table-sm">
+                    <tr>
+                        <td><strong>Date:</strong></td>
+                        <td>{{ stats.last_backup.timestamp[:19] if stats.last_backup.timestamp else 'Unknown' }}</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Containers:</strong></td>
+                        <td>{{ stats.last_backup.containers }}</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Size:</strong></td>
+                        <td>{{ "%.1f"|format(stats.last_backup.size / 1024) }} KB</td>
+                    </tr>
+                </table>
+                {% else %}
+                <p class="text-muted">No backups found</p>
+                <button class="btn btn-sm btn-primary" onclick="startBackup()">
+                    <i class="bi bi-download"></i> Create First Backup
+                </button>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Current Status -->
+<div class="row">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header">
+                <h5><i class="bi bi-activity"></i> Current Status</h5>
+            </div>
+            <div class="card-body">
+                {% if stats.status.running %}
+                <div class="alert alert-info">
+                    <i class="bi bi-arrow-clockwise spinner-border-sm"></i>
+                    Backup in progress: {{ stats.status.message }} ({{ stats.status.progress }}%)
+                    <div class="progress mt-2">
+                        <div class="progress-bar progress-bar-striped progress-bar-animated" 
+                             style="width: {{ stats.status.progress }}%"></div>
+                    </div>
+                </div>
+                {% elif stats.status.last_error %}
+                <div class="alert alert-danger">
+                    <i class="bi bi-exclamation-triangle"></i>
+                    Last backup failed: {{ stats.status.last_error }}
+                </div>
+                {% else %}
+                <div class="alert alert-success">
+                    <i class="bi bi-check-circle"></i>
+                    System ready for backup
+                    {% if stats.status.last_run %}
+                    <br><small>Last run: {{ stats.status.last_run[:19] }}</small>
+                    {% endif %}
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+{% endif %}
+{% endblock %}

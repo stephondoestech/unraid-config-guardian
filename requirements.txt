@@ -1,0 +1,37 @@
+# Core dependencies for Unraid Config Guardian
+docker>=6.1.0
+requests>=2.31.0
+pyyaml>=6.0.1
+jinja2>=3.1.2
+
+# Configuration and environment handling
+python-dotenv>=1.0.0
+toml>=0.10.2
+
+# CLI and logging
+click>=8.1.0
+colorama>=0.4.6
+rich>=13.0.0
+
+# Data processing and validation
+pydantic>=2.0.0
+jsonschema>=4.19.0
+
+# File operations and compression
+pathlib2>=2.3.7; python_version < "3.4"
+
+# Web interface components (for system-report.html generation)
+beautifulsoup4>=4.12.0
+markdown>=3.5.0
+
+# Scheduling and cron support
+croniter>=1.4.0
+
+# Security and masking
+cryptography>=41.0.0
+
+# Web GUI
+fastapi>=0.104.0
+uvicorn[standard]>=0.24.0
+jinja2>=3.1.2
+python-multipart>=0.0.6

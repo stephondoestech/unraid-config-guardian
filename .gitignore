@@ -1,0 +1,58 @@
+# Unraid Config Guardian - .gitignore
+
+# ================================
+# Generated Documentation - Don't commit actual server configs
+# ================================
+unraid-backup/
+backup/
+output/
+unraid-config.json
+docker-compose.generated.yml
+restore.sh
+
+# ================================
+# Python
+# ================================
+__pycache__/
+*.py[cod]
+*.so
+venv/
+.venv/
+env/
+.env
+*.egg-info/
+dist/
+build/
+
+# Testing
+.pytest_cache/
+.coverage
+htmlcov/
+*.log
+
+# ================================
+# Development
+# ================================
+.vscode/
+.idea/
+*.swp
+*~
+.DS_Store
+
+# ================================
+# Docker
+# ================================
+docker-compose.override.yml
+
+# ================================
+# Sensitive Data - Never commit
+# ================================
+*password*
+*secret*
+*token*
+*api_key*
+
+# But allow example files
+!*.example
+!*.template
+CLAUDE.md

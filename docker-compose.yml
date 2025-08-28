@@ -1,0 +1,68 @@
+version: '3.8'
+
+services:
+  unraid-config-guardian:
+    build: .
+    container_name: unraid-config-guardian
+    restart: unless-stopped
+    
+    environment:
+      # Unraid user/group mapping
+      - PUID=99                    # nobody user
+      - PGID=100                   # users group
+      - TZ=America/New_York        # Adjust to your timezone
+      
+      # Backup configuration
+      - SCHEDULE=0 2 * * 0         # Weekly Sunday at 2 AM
+      - BACKUP_LOCATION=/output
+      - MASK_PASSWORDS=true
+      - INCLUDE_SYSTEM_INFO=true
+      - DEBUG=false
+      
+      # Optional: Notification settings
+      # - WEBHOOK_URL=https://hooks.slack.com/services/your/webhook/url
+      # - EMAIL_NOTIFICATIONS=admin@yourdomain.com
+    
+    volumes:
+      # Application configuration
+      - /mnt/user/appdata/unraid-config-guardian:/config
+      
+      # Output directory for generated documentation
+      - /mnt/user/backups/unraid-docs:/output
+      
+      # Docker socket for container inspection (read-only)
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+      
+      # Unraid flash drive configuration (read-only)
+      - /boot:/boot:ro
+      
+      # Optional: Additional system paths for comprehensive backup
+      # - /mnt/user:/mnt/user:ro
+      # - /etc/unraid:/etc/unraid:ro
+    
+    networks:
+      - unraid-guardian
+    
+    # Optional: Web interface port (if implemented)
+    ports:
+      - "7842:8080"
+    
+    # Security settings
+    security_opt:
+      - no-new-privileges:true
+    
+    # Resource limits
+    mem_limit: 1g
+    cpus: 0.5
+    
+    # Health check
+    healthcheck:
+      test: ["CMD", "python", "src/health_check.py"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+
+networks:
+  unraid-guardian:
+    driver: bridge

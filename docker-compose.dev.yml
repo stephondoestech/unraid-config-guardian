@@ -1,0 +1,63 @@
+# Docker Compose for local development
+
+services:
+  unraid-config-guardian:
+    build: .
+    container_name: unraid-config-guardian
+    restart: unless-stopped
+    
+    environment:
+      # Development settings - use current user's IDs
+      - PUID=${PUID:-1000}         # Use your local user ID
+      - PGID=${PGID:-1000}         # Use your local group ID
+      - TZ=America/New_York        # Adjust to your timezone
+      
+      # Backup configuration
+      - SCHEDULE=0 2 * * 0         # Weekly Sunday at 2 AM
+      - BACKUP_LOCATION=/output
+      - MASK_PASSWORDS=true
+      - INCLUDE_SYSTEM_INFO=true
+      - DEBUG=true
+      
+      # Optional: Notification settings
+      # - WEBHOOK_URL=https://hooks.slack.com/services/your/webhook/url
+      # - EMAIL_NOTIFICATIONS=admin@yourdomain.com
+    
+    volumes:
+      # Local development paths
+      - ./config:/config
+      - ./output:/output
+      
+      # Docker socket for container inspection
+      - /var/run/docker.sock:/var/run/docker.sock
+      
+      # For local development - these paths won't exist on non-Unraid systems
+      # Comment out or adjust as needed
+      # - /boot:/boot:ro
+    
+    networks:
+      - unraid-guardian
+    
+    # Web interface port
+    ports:
+      - "7842:8080"
+    
+    # Security settings
+    security_opt:
+      - no-new-privileges:true
+    
+    # Resource limits
+    mem_limit: 1g
+    cpus: 0.5
+    
+    # Health check
+    healthcheck:
+      test: ["CMD", "python", "src/health_check.py"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+
+networks:
+  unraid-guardian:
+    driver: bridge

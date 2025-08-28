@@ -1,0 +1,178 @@
+{% extends "base.html" %}
+
+{% block title %}Backups - Unraid Config Guardian{% endblock %}
+
+{% block content %}
+<div class="row mb-4">
+    <div class="col-12">
+        <h1><i class="bi bi-archive"></i> Backup Files</h1>
+        <p class="text-muted">Download and manage your generated backup files</p>
+    </div>
+</div>
+
+<div class="row mb-3">
+    <div class="col-md-6">
+        <div class="alert alert-info">
+            <i class="bi bi-info-circle"></i>
+            <strong>Backup Location:</strong> /output (container) or configured output directory
+        </div>
+    </div>
+    <div class="col-md-6 text-end">
+        <button class="btn btn-primary" onclick="startBackup()">
+            <i class="bi bi-download"></i> Generate New Backup
+        </button>
+        <button class="btn btn-outline-secondary" onclick="location.reload()">
+            <i class="bi bi-arrow-clockwise"></i> Refresh
+        </button>
+    </div>
+</div>
+
+{% if backups %}
+<div class="table-responsive">
+    <table class="table table-striped">
+        <thead>
+            <tr>
+                <th>File</th>
+                <th>Size</th>
+                <th>Modified</th>
+                <th>Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for backup in backups %}
+            <tr>
+                <td>
+                    <i class="bi bi-file-text me-2"></i>
+                    <strong>{{ backup.name }}</strong>
+                    {% if backup.name.endswith('.json') %}
+                    <span class="badge bg-primary ms-2">Config</span>
+                    {% elif backup.name.endswith('.yml') %}
+                    <span class="badge bg-success ms-2">Compose</span>
+                    {% elif backup.name.endswith('.sh') %}
+                    <span class="badge bg-warning ms-2">Script</span>
+                    {% elif backup.name.endswith('.md') %}
+                    <span class="badge bg-info ms-2">Docs</span>
+                    {% endif %}
+                </td>
+                <td>
+                    {% if backup.size < 1024 %}
+                    {{ backup.size }} B
+                    {% elif backup.size < 1024 * 1024 %}
+                    {{ "%.1f"|format(backup.size / 1024) }} KB
+                    {% else %}
+                    {{ "%.1f"|format(backup.size / (1024 * 1024)) }} MB
+                    {% endif %}
+                </td>
+                <td>
+                    <small class="text-muted">{{ backup.modified.strftime('%Y-%m-%d %H:%M:%S') }}</small>
+                </td>
+                <td>
+                    <a href="/download/{{ backup.name }}" class="btn btn-sm btn-outline-primary">
+                        <i class="bi bi-download"></i> Download
+                    </a>
+                    {% if backup.name.endswith(('.json', '.yml', '.md')) %}
+                    <button class="btn btn-sm btn-outline-secondary" 
+                            onclick="previewFile('{{ backup.name }}')"
+                            data-bs-toggle="modal" 
+                            data-bs-target="#previewModal">
+                        <i class="bi bi-eye"></i> Preview
+                    </button>
+                    {% endif %}
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+
+<!-- File descriptions -->
+<div class="row mt-4">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header">
+                <h5><i class="bi bi-info-circle"></i> File Descriptions</h5>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-6">
+                        <h6><i class="bi bi-file-text text-primary"></i> unraid-config.json</h6>
+                        <p class="small text-muted">Complete system configuration including all containers, system info, and metadata.</p>
+                        
+                        <h6><i class="bi bi-file-code text-success"></i> docker-compose.yml</h6>
+                        <p class="small text-muted">Docker Compose file to recreate all running containers with their configurations.</p>
+                    </div>
+                    <div class="col-md-6">
+                        <h6><i class="bi bi-terminal text-warning"></i> restore.sh</h6>
+                        <p class="small text-muted">Automated restoration script to quickly deploy containers after disaster recovery.</p>
+                        
+                        <h6><i class="bi bi-file-text text-info"></i> README.md</h6>
+                        <p class="small text-muted">Step-by-step recovery guide with manual instructions and system overview.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% else %}
+<div class="alert alert-warning text-center">
+    <i class="bi bi-exclamation-triangle"></i>
+    <h5>No backup files found</h5>
+    <p>Generate your first backup to see files here.</p>
+    <button class="btn btn-primary" onclick="startBackup()">
+        <i class="bi bi-download"></i> Generate First Backup
+    </button>
+</div>
+{% endif %}
+
+<!-- Preview Modal -->
+<div class="modal fade" id="previewModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="previewModalTitle">File Preview</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <pre id="previewContent" class="bg-light p-3" style="max-height: 500px; overflow-y: auto;"><code>Loading...</code></pre>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                <a id="downloadLink" href="#" class="btn btn-primary">
+                    <i class="bi bi-download"></i> Download
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% endblock %}
+
+{% block scripts %}
+<script>
+function previewFile(filename) {
+    document.getElementById('previewModalTitle').textContent = 'Preview: ' + filename;
+    document.getElementById('downloadLink').href = '/download/' + filename;
+    document.getElementById('previewContent').innerHTML = '<code>Loading...</code>';
+    
+    fetch('/download/' + filename)
+        .then(response => response.text())
+        .then(content => {
+            // Escape HTML and limit content length
+            const maxLength = 10000;
+            let displayContent = content;
+            
+            if (displayContent.length > maxLength) {
+                displayContent = displayContent.substring(0, maxLength) + '\n\n... (content truncated, download full file)';
+            }
+            
+            document.getElementById('previewContent').innerHTML = 
+                '<code>' + displayContent.replace(/</g, '&lt;').replace(/>/g, '&gt;') + '</code>';
+        })
+        .catch(err => {
+            document.getElementById('previewContent').innerHTML = 
+                '<code class="text-danger">Error loading file: ' + err + '</code>';
+        });
+}
+</script>
+{% endblock %}

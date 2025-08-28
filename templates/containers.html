@@ -1,0 +1,141 @@
+{% extends "base.html" %}
+
+{% block title %}Containers - Unraid Config Guardian{% endblock %}
+
+{% block content %}
+<div class="row mb-4">
+    <div class="col-12">
+        <h1><i class="bi bi-box"></i> Docker Containers</h1>
+        <p class="text-muted">Overview of all Docker containers on your Unraid server</p>
+    </div>
+</div>
+
+<div class="row mb-3">
+    <div class="col-md-6">
+        <input type="text" id="searchInput" class="form-control" placeholder="Search containers...">
+    </div>
+    <div class="col-md-6 text-end">
+        <button class="btn btn-primary" onclick="startBackup()">
+            <i class="bi bi-download"></i> Generate Backup
+        </button>
+        <button class="btn btn-outline-secondary" onclick="location.reload()">
+            <i class="bi bi-arrow-clockwise"></i> Refresh
+        </button>
+    </div>
+</div>
+
+<div class="table-responsive">
+    <table class="table table-striped" id="containersTable">
+        <thead>
+            <tr>
+                <th>Name</th>
+                <th>Image</th>
+                <th>Status</th>
+                <th>Ports</th>
+                <th>Volumes</th>
+                <th>Environment Variables</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for container in containers %}
+            <tr>
+                <td>
+                    <strong>{{ container.name }}</strong>
+                </td>
+                <td>
+                    <code>{{ container.image }}</code>
+                </td>
+                <td>
+                    {% if container.status == 'running' %}
+                    <span class="badge bg-success">
+                        <i class="bi bi-play-circle"></i> {{ container.status }}
+                    </span>
+                    {% elif container.status == 'exited' %}
+                    <span class="badge bg-danger">
+                        <i class="bi bi-stop-circle"></i> {{ container.status }}
+                    </span>
+                    {% else %}
+                    <span class="badge bg-warning">
+                        <i class="bi bi-pause-circle"></i> {{ container.status }}
+                    </span>
+                    {% endif %}
+                </td>
+                <td>
+                    {% if container.ports %}
+                        {% for port in container.ports %}
+                        <small class="badge bg-secondary me-1">{{ port }}</small>
+                        {% endfor %}
+                    {% else %}
+                    <span class="text-muted">None</span>
+                    {% endif %}
+                </td>
+                <td>
+                    {% if container.volumes %}
+                    <button class="btn btn-sm btn-outline-info" type="button" 
+                            data-bs-toggle="collapse" 
+                            data-bs-target="#volumes-{{ loop.index }}"
+                            aria-expanded="false">
+                        {{ container.volumes|length }} volumes
+                    </button>
+                    <div class="collapse mt-2" id="volumes-{{ loop.index }}">
+                        {% for volume in container.volumes %}
+                        <small class="d-block text-muted"><code>{{ volume }}</code></small>
+                        {% endfor %}
+                    </div>
+                    {% else %}
+                    <span class="text-muted">None</span>
+                    {% endif %}
+                </td>
+                <td>
+                    {% if container.environment %}
+                    <button class="btn btn-sm btn-outline-secondary" type="button" 
+                            data-bs-toggle="collapse" 
+                            data-bs-target="#env-{{ loop.index }}"
+                            aria-expanded="false">
+                        {{ container.environment.keys()|list|length }} vars
+                    </button>
+                    <div class="collapse mt-2" id="env-{{ loop.index }}">
+                        {% for key, value in container.environment.items() %}
+                        <small class="d-block">
+                            <strong>{{ key }}:</strong> 
+                            {% if value == '***MASKED***' %}
+                            <span class="text-warning">{{ value }}</span>
+                            {% else %}
+                            <code>{{ value }}</code>
+                            {% endif %}
+                        </small>
+                        {% endfor %}
+                    </div>
+                    {% else %}
+                    <span class="text-muted">None</span>
+                    {% endif %}
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+
+{% if not containers %}
+<div class="alert alert-info text-center">
+    <i class="bi bi-info-circle"></i>
+    No containers found. Make sure Docker is running and accessible.
+</div>
+{% endif %}
+
+{% endblock %}
+
+{% block scripts %}
+<script>
+// Search functionality
+document.getElementById('searchInput').addEventListener('keyup', function() {
+    const filter = this.value.toLowerCase();
+    const rows = document.querySelectorAll('#containersTable tbody tr');
+    
+    rows.forEach(function(row) {
+        const text = row.textContent.toLowerCase();
+        row.style.display = text.includes(filter) ? '' : 'none';
+    });
+});
+</script>
+{% endblock %}
