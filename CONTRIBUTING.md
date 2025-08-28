@@ -134,13 +134,13 @@ docker/
 ```python
 def process_container(container: Dict[str, Any]) -> ContainerInfo:
     """Process a Docker container and extract configuration.
-    
+
     Args:
         container: Raw Docker container data
-        
+
     Returns:
         ContainerInfo object with parsed configuration
-        
+
     Raises:
         ValueError: If container data is invalid
     """

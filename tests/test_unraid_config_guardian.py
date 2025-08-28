@@ -3,18 +3,15 @@
 Simple tests for Unraid Config Guardian
 """
 
-import json
-
-# Import the module to test
 import sys
-import tempfile
 from pathlib import Path
 from unittest.mock import Mock, patch
 
 import pytest
 
+# Import the module to test
 sys.path.insert(0, "src")
-import unraid_config_guardian as guardian
+import unraid_config_guardian as guardian  # noqa: E402
 
 
 def test_get_containers():

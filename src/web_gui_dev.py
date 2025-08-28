@@ -184,7 +184,7 @@ async def list_backups(request: Request):
                     }
                 )
 
-    backups.sort(key=lambda x: x["modified"], reverse=True)
+    backups.sort(key=lambda x: x["modified"], reverse=True)  # type: ignore
 
     return templates.TemplateResponse(
         "backups.html", {"request": request, "backups": backups}

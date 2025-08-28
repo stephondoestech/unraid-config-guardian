@@ -9,7 +9,7 @@ The repository now includes a complete CI/CD pipeline with:
 ```
 .github/
 ├── workflows/
-│   ├── ci-cd.yml          # Main CI/CD pipeline  
+│   ├── ci-cd.yml          # Main CI/CD pipeline
 │   └── release.yml        # Automatic releases
 └── ISSUE_TEMPLATE/
     ├── bug_report.md      # Bug report template

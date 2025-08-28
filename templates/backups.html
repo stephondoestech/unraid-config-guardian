@@ -71,9 +71,9 @@
                         <i class="bi bi-download"></i> Download
                     </a>
                     {% if backup.name.endswith(('.json', '.yml', '.md')) %}
-                    <button class="btn btn-sm btn-outline-secondary" 
+                    <button class="btn btn-sm btn-outline-secondary"
                             onclick="previewFile('{{ backup.name }}')"
-                            data-bs-toggle="modal" 
+                            data-bs-toggle="modal"
                             data-bs-target="#previewModal">
                         <i class="bi bi-eye"></i> Preview
                     </button>
@@ -97,14 +97,14 @@
                     <div class="col-md-6">
                         <h6><i class="bi bi-file-text text-primary"></i> unraid-config.json</h6>
                         <p class="small text-muted">Complete system configuration including all containers, system info, and metadata.</p>
-                        
+
                         <h6><i class="bi bi-file-code text-success"></i> docker-compose.yml</h6>
                         <p class="small text-muted">Docker Compose file to recreate all running containers with their configurations.</p>
                     </div>
                     <div class="col-md-6">
                         <h6><i class="bi bi-terminal text-warning"></i> restore.sh</h6>
                         <p class="small text-muted">Automated restoration script to quickly deploy containers after disaster recovery.</p>
-                        
+
                         <h6><i class="bi bi-file-text text-info"></i> README.md</h6>
                         <p class="small text-muted">Step-by-step recovery guide with manual instructions and system overview.</p>
                     </div>
@@ -154,23 +154,23 @@ function previewFile(filename) {
     document.getElementById('previewModalTitle').textContent = 'Preview: ' + filename;
     document.getElementById('downloadLink').href = '/download/' + filename;
     document.getElementById('previewContent').innerHTML = '<code>Loading...</code>';
-    
+
     fetch('/download/' + filename)
         .then(response => response.text())
         .then(content => {
             // Escape HTML and limit content length
             const maxLength = 10000;
             let displayContent = content;
-            
+
             if (displayContent.length > maxLength) {
                 displayContent = displayContent.substring(0, maxLength) + '\n\n... (content truncated, download full file)';
             }
-            
-            document.getElementById('previewContent').innerHTML = 
+
+            document.getElementById('previewContent').innerHTML =
                 '<code>' + displayContent.replace(/</g, '&lt;').replace(/>/g, '&gt;') + '</code>';
         })
         .catch(err => {
-            document.getElementById('previewContent').innerHTML = 
+            document.getElementById('previewContent').innerHTML =
                 '<code class="text-danger">Error loading file: ' + err + '</code>';
         });
 }

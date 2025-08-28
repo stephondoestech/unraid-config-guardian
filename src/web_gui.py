@@ -23,6 +23,7 @@ try:
         get_containers,
         get_system_info,
     )
+
     DOCKER_AVAILABLE = True
 except Exception:
     DOCKER_AVAILABLE = False
@@ -197,7 +198,7 @@ async def list_backups(request: Request):
                     }
                 )
 
-    backups.sort(key=lambda x: x["modified"], reverse=True)
+    backups.sort(key=lambda x: x["modified"], reverse=True)  # type: ignore
 
     return templates.TemplateResponse(
         "backups.html", {"request": request, "backups": backups}

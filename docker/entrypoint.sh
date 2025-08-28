@@ -11,7 +11,7 @@ if [ "$(id -u)" = "0" ] && [ -n "$PUID" ] && [ -n "$PGID" ]; then
     # Change guardian user/group IDs to match Unraid
     groupmod -o -g "$PGID" guardian 2>/dev/null || true
     usermod -o -u "$PUID" guardian 2>/dev/null || true
-    
+
     # Ensure proper ownership
     chown -R guardian:guardian /config /output /app 2>/dev/null || true
 elif [ "$(id -u)" != "0" ]; then
@@ -42,14 +42,14 @@ guardian:
     mask_passwords: ${MASK_PASSWORDS:-true}
     include_system_info: ${INCLUDE_SYSTEM_INFO:-true}
     output_location: ${BACKUP_LOCATION:-/output}
-  
+
   notifications:
     webhook_url: ${WEBHOOK_URL:-}
     email: ${EMAIL_NOTIFICATIONS:-}
-  
+
   debug: ${DEBUG:-false}
 EOF
-    
+
     # Set ownership if running as root
     if [ "$(id -u)" = "0" ]; then
         chown guardian:guardian /config/config.yml 2>/dev/null || true

@@ -9,7 +9,7 @@ jobs:
   release:
     name: Create Release
     runs-on: ubuntu-latest
-    
+
     steps:
     - name: Checkout code
       uses: actions/checkout@v4
@@ -21,14 +21,14 @@ jobs:
       run: |
         # Get the previous tag
         PREV_TAG=$(git describe --tags --abbrev=0 HEAD~1 2>/dev/null || echo "")
-        
+
         # Generate changelog
         if [ -z "$PREV_TAG" ]; then
           CHANGELOG=$(git log --pretty=format:"* %s (%h)" --no-merges)
         else
           CHANGELOG=$(git log $PREV_TAG..HEAD --pretty=format:"* %s (%h)" --no-merges)
         fi
-        
+
         # Set output
         echo "CHANGELOG<<EOF" >> $GITHUB_OUTPUT
         echo "$CHANGELOG" >> $GITHUB_OUTPUT
@@ -44,11 +44,11 @@ jobs:
         body: |
           ## Changes
           ${{ steps.changelog.outputs.CHANGELOG }}
-          
+
           ## Docker Images
           - `docker pull stephondoestech/unraid-config-guardian:${{ github.ref_name }}`
           - `docker pull stephondoestech/unraid-config-guardian:latest`
-          
+
           ## Installation
           ```bash
           # Quick Unraid deployment

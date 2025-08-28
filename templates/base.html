@@ -68,7 +68,7 @@
                 </div>
                 <div class="modal-body">
                     <div class="progress mb-3">
-                        <div id="progress-bar" class="progress-bar progress-bar-striped progress-bar-animated" 
+                        <div id="progress-bar" class="progress-bar progress-bar-striped progress-bar-animated"
                              role="progressbar" style="width: 0%"></div>
                     </div>
                     <div id="progress-message">Starting backup...</div>
@@ -121,11 +121,11 @@
                     alert('Error: ' + data.error);
                     return;
                 }
-                
+
                 // Show progress modal
                 progressModal = new bootstrap.Modal(document.getElementById('progressModal'));
                 progressModal.show();
-                
+
                 // Start polling for progress
                 progressInterval = setInterval(updateProgress, 1000);
             })
@@ -141,11 +141,11 @@
                 .then(data => {
                     const progressBar = document.getElementById('progress-bar');
                     const message = document.getElementById('progress-message');
-                    
+
                     progressBar.style.width = data.progress + '%';
                     progressBar.setAttribute('aria-valuenow', data.progress);
                     message.textContent = data.message;
-                    
+
                     if (!data.running) {
                         clearInterval(progressInterval);
                         setTimeout(() => {

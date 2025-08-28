@@ -13,6 +13,7 @@ import os
 import subprocess
 from datetime import datetime
 from pathlib import Path
+from typing import List
 
 import yaml
 
@@ -191,7 +192,7 @@ def setup_logging(debug: bool = False, output_dir: str = "/output") -> None:
     log_dir.mkdir(parents=True, exist_ok=True)
 
     # Setup handlers
-    handlers = [logging.StreamHandler()]
+    handlers: List[logging.Handler] = [logging.StreamHandler()]
 
     # Add file handler if we can write to the directory
     log_file = log_dir / "guardian.log"

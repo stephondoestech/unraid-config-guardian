@@ -3,9 +3,9 @@ guardian:
     mask_passwords: true
     include_system_info: true
     output_location: /output
-  
+
   notifications:
-    webhook_url: 
-    email: 
-  
+    webhook_url:
+    email:
+
   debug: true

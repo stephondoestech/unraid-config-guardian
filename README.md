@@ -80,7 +80,7 @@ unraid-backup/
 ```bash
 # Essential environment variables
 PUID=99                    # Unraid user ID
-PGID=100                   # Unraid group ID  
+PGID=100                   # Unraid group ID
 TZ=America/New_York        # Timezone
 SCHEDULE=0 2 * * 0         # Weekly backup (Sunday 2 AM)
 MASK_PASSWORDS=true        # Hide sensitive data

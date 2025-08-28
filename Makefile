@@ -183,7 +183,7 @@ deploy: check docker-build docker-run ## Deploy to production
 ci-test: ## Run CI tests (used by GitHub Actions)
 	@echo "$(BLUE)Running CI test suite...$(NC)"
 	pytest tests/ -v --cov=src/ --cov-report=xml --cov-report=term
-	
+
 ci-build: ## Build for CI (multi-platform)
 	@echo "$(BLUE)Building multi-platform image...$(NC)"
 	docker buildx build --platform linux/amd64,linux/arm64 -t $(IMAGE_NAME):$(IMAGE_TAG) .
@@ -192,7 +192,7 @@ ci-push: ## Push to Docker Hub (used by GitHub Actions)
 	@echo "$(BLUE)Pushing to Docker Hub...$(NC)"
 	docker push $(IMAGE_NAME):$(IMAGE_TAG)
 
-# Release commands  
+# Release commands
 tag: ## Create and push a new tag (usage: make tag VERSION=v1.0.0)
 	@if [ -z "$(VERSION)" ]; then echo "Usage: make tag VERSION=v1.0.0"; exit 1; fi
 	@echo "$(BLUE)Creating tag $(VERSION)...$(NC)"

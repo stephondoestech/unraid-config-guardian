@@ -24,14 +24,14 @@ SOFTWARE.
 
 Additional Terms for Unraid Integration:
 
-This software is designed to work with Unraid OS and integrates with various 
-Unraid Community Applications. The software does not modify Unraid OS itself 
+This software is designed to work with Unraid OS and integrates with various
+Unraid Community Applications. The software does not modify Unraid OS itself
 and respects all Unraid licensing terms.
 
-Docker container inspection and configuration generation are performed using 
+Docker container inspection and configuration generation are performed using
 publicly available Docker APIs and do not interfere with normal Unraid operation.
 
-Users are responsible for ensuring their use of this software complies with 
+Users are responsible for ensuring their use of this software complies with
 their Unraid license terms and any applicable container software licenses.
 
 ---

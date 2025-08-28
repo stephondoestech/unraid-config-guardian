@@ -71,8 +71,8 @@
                 </td>
                 <td>
                     {% if container.volumes %}
-                    <button class="btn btn-sm btn-outline-info" type="button" 
-                            data-bs-toggle="collapse" 
+                    <button class="btn btn-sm btn-outline-info" type="button"
+                            data-bs-toggle="collapse"
                             data-bs-target="#volumes-{{ loop.index }}"
                             aria-expanded="false">
                         {{ container.volumes|length }} volumes
@@ -88,8 +88,8 @@
                 </td>
                 <td>
                     {% if container.environment %}
-                    <button class="btn btn-sm btn-outline-secondary" type="button" 
-                            data-bs-toggle="collapse" 
+                    <button class="btn btn-sm btn-outline-secondary" type="button"
+                            data-bs-toggle="collapse"
                             data-bs-target="#env-{{ loop.index }}"
                             aria-expanded="false">
                         {{ container.environment.keys()|list|length }} vars
@@ -97,7 +97,7 @@
                     <div class="collapse mt-2" id="env-{{ loop.index }}">
                         {% for key, value in container.environment.items() %}
                         <small class="d-block">
-                            <strong>{{ key }}:</strong> 
+                            <strong>{{ key }}:</strong>
                             {% if value == '***MASKED***' %}
                             <span class="text-warning">{{ value }}</span>
                             {% else %}
@@ -131,7 +131,7 @@
 document.getElementById('searchInput').addEventListener('keyup', function() {
     const filter = this.value.toLowerCase();
     const rows = document.querySelectorAll('#containersTable tbody tr');
-    
+
     rows.forEach(function(row) {
         const text = row.textContent.toLowerCase();
         row.style.display = text.includes(filter) ? '' : 'none';

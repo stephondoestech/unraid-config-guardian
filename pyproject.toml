@@ -53,7 +53,7 @@ python_functions = ["test_*"]
 source = ["src"]
 omit = [
     "tests/*",
-    "venv/*", 
+    "venv/*",
     ".venv/*",
     "*/site-packages/*"
 ]

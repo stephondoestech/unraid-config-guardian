@@ -14,7 +14,7 @@ RUN groupadd -g 1000 guardian && \
     useradd -u 1000 -g guardian -s /bin/bash -m guardian
 
 # Install system dependencies
-RUN apt-get update && apt-get install -y \
+RUN apt-get update && apt-get install -y --no-install-recommends \
     curl \
     cron \
     gosu \
