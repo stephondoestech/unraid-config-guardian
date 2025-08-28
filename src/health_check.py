@@ -3,10 +3,11 @@
 Health check script for Unraid Config Guardian container
 """
 
-import sys
 import os
-import docker
+import sys
 from pathlib import Path
+
+import docker
 
 
 def check_docker_connection():
@@ -23,8 +24,8 @@ def check_docker_connection():
 def check_output_directory():
     """Check if output directory is writable."""
     try:
-        output_dir = Path(os.getenv('OUTPUT_DIR', '/output'))
-        test_file = output_dir / '.health_check'
+        output_dir = Path(os.getenv("OUTPUT_DIR", "/output"))
+        test_file = output_dir / ".health_check"
         test_file.touch()
         test_file.unlink()
         return True
@@ -36,7 +37,7 @@ def check_output_directory():
 def check_config_directory():
     """Check if config directory is accessible."""
     try:
-        config_dir = Path('/config')
+        config_dir = Path("/config")
         return config_dir.exists() and config_dir.is_dir()
     except Exception as e:
         print(f"Config directory check failed: {e}")
@@ -50,9 +51,9 @@ def main():
         ("Output directory", check_output_directory),
         ("Config directory", check_config_directory),
     ]
-    
+
     all_passed = True
-    
+
     for check_name, check_func in checks:
         try:
             if check_func():
@@ -63,7 +64,7 @@ def main():
         except Exception as e:
             print(f"❌ {check_name}: ERROR - {e}")
             all_passed = False
-    
+
     if all_passed:
         print("🟢 All health checks passed")
         sys.exit(0)

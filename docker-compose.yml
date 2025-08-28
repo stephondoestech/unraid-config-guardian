@@ -43,7 +43,7 @@ services:
     networks:
       - unraid-guardian
     
-    # Optional: Web interface port (if implemented)
+    # Web interface port
     ports:
       - "7842:8080"
     

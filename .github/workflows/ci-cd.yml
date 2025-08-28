@@ -32,11 +32,10 @@ jobs:
         pip install -r requirements.txt
         pip install -r requirements-dev.txt
 
-    - name: Run code formatting check
-      run: black --check src/ tests/
-
-    - name: Run linting
-      run: flake8 src/ --max-line-length=88 --extend-ignore=E203,W503
+    - name: Run pre-commit hooks
+      run: |
+        pre-commit install
+        pre-commit run --all-files
 
     - name: Run type checking
       run: mypy src/ --ignore-missing-imports
