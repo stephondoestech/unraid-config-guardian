@@ -147,7 +147,8 @@ async def api_containers():
         print(f"DEBUG: DOCKER_AVAILABLE = {DOCKER_AVAILABLE}")
         containers = get_containers_safe()
         print(f"DEBUG: get_containers_safe() returned {len(containers)} containers")
-        print(f"DEBUG: First container name: {containers[0]['name'] if containers else 'None'}")
+        if containers:
+            print(f"DEBUG: First container name: {containers[0]['name']}")
         print(f"DEBUG: Is mock data? {containers == MOCK_CONTAINERS}")
         return {"containers": containers}
     except Exception as e:
