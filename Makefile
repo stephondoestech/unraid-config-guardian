@@ -199,3 +199,26 @@ tag: ## Create and push a new tag (usage: make tag VERSION=v1.0.0)
 	git tag -a $(VERSION) -m "Release $(VERSION)"
 	git push origin $(VERSION)
 	@echo "$(GREEN)Tag $(VERSION) created and pushed!$(NC)"
+	@echo "$(YELLOW)GitHub Actions will automatically:$(NC)"
+	@echo "  - Build and push Docker image: stephondoestech/unraid-config-guardian:$(VERSION)"
+	@echo "  - Create GitHub Release"
+	@echo "  - Update latest tag"
+
+release-patch: ## Create patch release (v1.0.0 -> v1.0.1)
+	@echo "$(BLUE)Creating patch release...$(NC)"
+	@LATEST=$$(git tag -l "v*.*.*" | sort -V | tail -1); \
+	if [ -z "$$LATEST" ]; then \
+		NEW_VERSION="v1.0.0"; \
+	else \
+		MAJOR=$$(echo $$LATEST | cut -d. -f1); \
+		MINOR=$$(echo $$LATEST | cut -d. -f2); \
+		PATCH=$$(echo $$LATEST | cut -d. -f3); \
+		NEW_PATCH=$$((PATCH + 1)); \
+		NEW_VERSION="$$MAJOR.$$MINOR.$$NEW_PATCH"; \
+	fi; \
+	echo "Next version: $$NEW_VERSION"; \
+	make tag VERSION=$$NEW_VERSION
+
+list-releases: ## List all releases
+	@echo "$(BLUE)Available releases:$(NC)"
+	@git tag -l "v*.*.*" | sort -V | tail -10
