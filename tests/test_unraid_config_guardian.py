@@ -74,17 +74,37 @@ def test_generate_compose():
 
 
 @patch("subprocess.run")
-def test_get_system_info(mock_subprocess):
+@patch("builtins.open")
+def test_get_system_info(mock_open, mock_subprocess):
     """Test system information gathering."""
     mock_subprocess.return_value.stdout = "unraid-server"
-
+    
+    # Mock file contexts with proper enter/exit
+    mock_ident_file = Mock()
+    mock_ident_file.__enter__ = Mock(return_value=mock_ident_file)
+    mock_ident_file.__exit__ = Mock(return_value=None)
+    mock_ident_file.__iter__ = Mock(return_value=iter(['NAME="TestServer"\n']))
+    
+    mock_changes_file = Mock()
+    mock_changes_file.__enter__ = Mock(return_value=mock_changes_file)
+    mock_changes_file.__exit__ = Mock(return_value=None)
+    mock_changes_file.readline.return_value = "# Version 7.1.4 2025-06-18"
+    
+    def open_side_effect(filename, *args, **kwargs):
+        if "/boot/config/ident.cfg" in filename:
+            return mock_ident_file
+        elif "/boot/changes.txt" in filename:
+            return mock_changes_file
+        return Mock()
+    
+    mock_open.side_effect = open_side_effect
+    
     with patch.object(Path, "exists", return_value=True):
-        with patch.object(Path, "read_text", return_value="6.12.4"):
-            info = guardian.get_system_info()
-
-            assert info["hostname"] == "unraid-server"
-            assert info["unraid_version"] == "6.12.4"
-            assert "timestamp" in info
+        info = guardian.get_system_info()
+        
+        assert info["hostname"] == "TestServer"
+        assert info["unraid_version"] == "7.1.4"
+        assert "timestamp" in info
 
 
 def test_create_restore_script():
