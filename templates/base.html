@@ -99,8 +99,8 @@
                 .catch(err => console.log('Status update failed:', err));
         }
 
-        // Update status every 30 seconds
-        setInterval(updateStatus, 30000);
+        // Update status every 30 minutes
+        setInterval(updateStatus, 1800000);
         updateStatus();
 
         // Progress modal handling

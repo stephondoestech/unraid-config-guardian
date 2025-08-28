@@ -127,10 +127,15 @@ def get_system_info():
 
     # Try to get Unraid version from mounted /boot directory
     try:
-        if Path("/boot/version").exists():
-            info["unraid_version"] = Path("/boot/version").read_text().strip()
-        elif Path("/boot/config/version").exists():
-            info["unraid_version"] = Path("/boot/config/version").read_text().strip()
+        if Path("/boot/changes.txt").exists():
+            with open("/boot/changes.txt") as f:
+                first_line = f.readline().strip()
+                # Extract version from "# Version 7.1.4 2025-06-18" format
+                if first_line.startswith("# Version "):
+                    version_part = first_line.replace("# Version ", "").split()[0]
+                    info["unraid_version"] = version_part
+                else:
+                    info["unraid_version"] = "unknown"
         else:
             info["unraid_version"] = "unknown"
     except Exception:
