@@ -1,4 +1,8 @@
+<div align="center">
+
 # Unraid Config Guardian
+
+<img src="assets/unraid_guardian_logo.png" alt="Unraid Config Guardian Logo" width="200"/>
 
 [![CI/CD Pipeline](https://github.com/stephondoestech/unraid-config-guardian/actions/workflows/ci-cd.yml/badge.svg)](https://github.com/stephondoestech/unraid-config-guardian/actions/workflows/ci-cd.yml)
 [![Docker Pulls](https://img.shields.io/docker/pulls/stephondoestech/unraid-config-guardian)](https://hub.docker.com/r/stephondoestech/unraid-config-guardian)
@@ -7,10 +11,26 @@
 
 Automatically generate comprehensive disaster recovery documentation for your Unraid setup.
 
+</div>
+
 **Features:**
 - Complete server recreation in under 30 minutes
 - Docker-compose generation from running containers
 - Automated restoration scripts with security-conscious data masking
+
+## Application
+
+<div align="center">
+
+### Dashboard Overview
+<img src="assets/demo_home.png" alt="Dashboard Screenshot" width="600"/>
+
+### Container Management
+<img src="assets/demo_containers.png" alt="Container Management Screenshot" width="600"/>
+
+</div>
+
+
 
 ## 🚀 Quick Start
 
