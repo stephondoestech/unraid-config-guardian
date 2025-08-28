@@ -14,7 +14,7 @@
   <WebUI>http://[IP]:[PORT:7842]</WebUI>
   <TemplateURL>https://raw.githubusercontent.com/stephondoestech/unraid-config-guardian/main/unraid-template.xml</TemplateURL>
   <Icon>https://raw.githubusercontent.com/stephondoestech/unraid-config-guardian/main/icon.png</Icon>
-  <ExtraParams>--security-opt no-new-privileges</ExtraParams>
+  <ExtraParams>--security-opt no-new-privileges --group-add $(getent group docker | cut -d: -f3)</ExtraParams>
   <PostArgs/>
   <CPUset/>
   <DateInstalled/>

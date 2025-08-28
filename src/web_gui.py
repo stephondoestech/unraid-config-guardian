@@ -144,9 +144,14 @@ async def containers_page(request: Request):
 async def api_containers():
     """API endpoint for container data."""
     try:
+        print(f"DEBUG: DOCKER_AVAILABLE = {DOCKER_AVAILABLE}")
         containers = get_containers_safe()
+        print(f"DEBUG: get_containers_safe() returned {len(containers)} containers")
+        print(f"DEBUG: First container name: {containers[0]['name'] if containers else 'None'}")
+        print(f"DEBUG: Is mock data? {containers == MOCK_CONTAINERS}")
         return {"containers": containers}
     except Exception as e:
+        print(f"DEBUG: Exception in api_containers: {e}")
         return JSONResponse(status_code=500, content={"error": str(e)})
 
 
