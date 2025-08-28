@@ -36,7 +36,7 @@ jobs:
     - name: Run linting
       run: |
         black --check src/ tests/
-        flake8 src/ tests/
+        flake8 src/ tests/ --max-line-length=100 --extend-ignore=E203,W503
 
   docker-deploy:
     name: Deploy to Docker Hub
