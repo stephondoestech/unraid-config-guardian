@@ -100,17 +100,39 @@ def generate_compose(containers):
 
 def get_system_info():
     """Get basic system information."""
+    # Try to get Unraid server hostname from mounted /boot directory
+    hostname = "unknown"
+    try:
+        # Try to get hostname from Unraid boot config
+        if Path("/boot/config/ident.cfg").exists():
+            with open("/boot/config/ident.cfg") as f:
+                for line in f:
+                    if line.startswith("NAME="):
+                        hostname = line.split("=", 1)[1].strip().strip('"')
+                        break
+        if hostname == "unknown":
+            # Fallback to container hostname
+            hostname = subprocess.run(
+                ["hostname"], capture_output=True, text=True
+            ).stdout.strip()
+    except Exception:
+        hostname = subprocess.run(
+            ["hostname"], capture_output=True, text=True
+        ).stdout.strip()
+
     info = {
         "timestamp": datetime.now().isoformat(),
-        "hostname": subprocess.run(
-            ["hostname"], capture_output=True, text=True
-        ).stdout.strip(),
+        "hostname": hostname,
     }
 
-    # Try to get Unraid version
+    # Try to get Unraid version from mounted /boot directory
     try:
-        if Path("/etc/unraid-version").exists():
-            info["unraid_version"] = Path("/etc/unraid-version").read_text().strip()
+        if Path("/boot/version").exists():
+            info["unraid_version"] = Path("/boot/version").read_text().strip()
+        elif Path("/boot/config/version").exists():
+            info["unraid_version"] = Path("/boot/config/version").read_text().strip()
+        else:
+            info["unraid_version"] = "unknown"
     except Exception:
         info["unraid_version"] = "unknown"
 

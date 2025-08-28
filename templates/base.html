@@ -99,8 +99,8 @@
                 .catch(err => console.log('Status update failed:', err));
         }
 
-        // Update status every 5 seconds
-        setInterval(updateStatus, 5000);
+        // Update status every 30 seconds
+        setInterval(updateStatus, 30000);
         updateStatus();
 
         // Progress modal handling
@@ -127,7 +127,7 @@
                 progressModal.show();
 
                 // Start polling for progress
-                progressInterval = setInterval(updateProgress, 1000);
+                progressInterval = setInterval(updateProgress, 3000);
             })
             .catch(err => {
                 console.error('Backup failed:', err);
