@@ -106,7 +106,7 @@ def test_create_readme():
 
     assert "# Unraid Backup Documentation" in readme
     assert "test-server" in readme
-    assert "Containers: 5" in readme
+    assert "**Containers:** 5" in readme
 
 
 if __name__ == "__main__":
