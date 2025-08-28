@@ -7,7 +7,7 @@
 [![CI/CD Pipeline](https://github.com/stephondoestech/unraid-config-guardian/actions/workflows/ci-cd.yml/badge.svg)](https://github.com/stephondoestech/unraid-config-guardian/actions/workflows/ci-cd.yml)
 [![Docker Pulls](https://img.shields.io/docker/pulls/stephondoestech/unraid-config-guardian)](https://hub.docker.com/r/stephondoestech/unraid-config-guardian)
 [![GitHub release](https://img.shields.io/github/release/stephondoestech/unraid-config-guardian.svg)](https://github.com/stephondoestech/unraid-config-guardian/releases)
-[![License](https://img.shields.io/github/license/stephondoestech/unraid-config-guardian)](LICENSE.md)
+[![License](https://img.shields.io/github/license/stephondoestech/unraid-config-guardian)](LICENSE)
 
 Automatically generate comprehensive disaster recovery documentation for your Unraid setup.
 
