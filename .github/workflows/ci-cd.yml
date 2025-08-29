@@ -7,6 +7,10 @@ on:
   pull_request:
     branches: [ main ]
 
+permissions:
+  contents: write
+  packages: write
+
 env:
   DOCKER_IMAGE: stephondoestech/unraid-config-guardian
 
@@ -43,9 +47,6 @@ jobs:
     runs-on: ubuntu-latest
     needs: test
     if: github.event_name == 'push' && startsWith(github.ref, 'refs/tags/v')
-    permissions:
-      contents: write
-      packages: write
 
     steps:
     - name: Checkout code

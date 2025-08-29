@@ -67,6 +67,9 @@
                 <button class="btn btn-primary me-2" onclick="startBackup()">
                     <i class="bi bi-download"></i> Generate Backup Now
                 </button>
+                <a href="/download-all" class="btn btn-success me-2">
+                    <i class="bi bi-file-zip"></i> Download All (ZIP)
+                </a>
                 <a href="/containers" class="btn btn-outline-secondary me-2">
                     <i class="bi bi-box"></i> View Containers
                 </a>
@@ -94,6 +97,10 @@
                     <tr>
                         <td><strong>Unraid Version:</strong></td>
                         <td>{{ stats.system_info.get('unraid_version', 'Unknown') }}</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Guardian Version:</strong></td>
+                        <td>{{ stats.system_info.get('guardian_version', 'Unknown') }}</td>
                     </tr>
                     <tr>
                         <td><strong>Last Scan:</strong></td>
