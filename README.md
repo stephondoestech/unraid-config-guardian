@@ -82,6 +82,32 @@ unraid-backup/
 └── system-report.html      # Visual documentation dashboard
 ```
 
+## Disaster Recovery
+
+### Quick Restore Process
+
+1. **Install fresh Unraid** on new hardware
+2. **Set up disk array** and basic configuration  
+3. **Navigate to backup location:**
+   ```bash
+   cd /mnt/user/backups/unraid-docs/latest
+   ```
+4. **Run restore script:**
+   ```bash
+   bash restore.sh
+   ```
+5. **Restore your appdata** from backup
+6. **Verify containers:** `docker-compose ps`
+
+### Common Issues
+
+- **Missing docker-compose:** Install it first
+- **Permission errors:** Run `chmod +x restore.sh`
+- **Container failures:** Check logs with `docker logs <container>`
+- **Missing passwords:** Edit `secrets.env.example` and save as `.env`
+
+The generated files contain everything needed to recreate your setup. Store backups offsite and test the restore process!
+
 ## ✨ Key Features
 
 - **Complete Documentation**: Docker containers, network settings, user shares, and plugin configurations

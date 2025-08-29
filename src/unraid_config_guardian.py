@@ -24,43 +24,83 @@ import docker
 
 def get_containers():
     """Get all Docker containers and their info."""
-    client = docker.from_env()
+    try:
+        client = docker.from_env()
+        # Test Docker connectivity
+        client.ping()
+    except Exception as e:
+        logging.error(f"Cannot connect to Docker daemon: {e}")
+        logging.error("Make sure Docker is running and the socket is accessible")
+        logging.error("For Unraid: Ensure container has access to /var/run/docker.sock")
+        raise
+
     containers = []
 
     for container in client.containers.list(all=True):
         # Extract basic info
-        info = {
-            "name": container.name,
-            "image": container.image.tags[0] if container.image.tags else "unknown",
-            "status": container.status,
-            "ports": [],
-            "volumes": [],
-            "environment": {},
-        }
+        try:
+            # Try to get image info, handle missing images gracefully
+            image_name = "unknown"
+            try:
+                if container.image and container.image.tags:
+                    image_name = container.image.tags[0]
+                elif hasattr(container, 'attrs') and container.attrs.get('Config', {}).get('Image'):
+                    # Fallback to image name from container config
+                    image_name = container.attrs['Config']['Image']
+            except (docker.errors.ImageNotFound, docker.errors.NotFound, AttributeError):
+                # Image was deleted or not found, try to get from container attrs
+                if hasattr(container, 'attrs') and container.attrs.get('Config', {}).get('Image'):
+                    image_name = container.attrs['Config']['Image']
+                else:
+                    image_name = f"missing-image-{container.id[:12]}"
+            
+            info = {
+                "name": container.name,
+                "image": image_name,
+                "status": container.status,
+                "ports": [],
+                "volumes": [],
+                "environment": {},
+            }
+        except Exception as e:
+            logging.warning(f"Error processing container {container.name}: {e}")
+            continue
 
         # Get ports
-        ports = container.attrs["NetworkSettings"]["Ports"] or {}
-        for container_port, host_bindings in ports.items():
-            if host_bindings:
-                host_port = host_bindings[0]["HostPort"]
-                info["ports"].append(f"{host_port}:{container_port}")
+        try:
+            ports = container.attrs.get("NetworkSettings", {}).get("Ports") or {}
+            for container_port, host_bindings in ports.items():
+                if host_bindings:
+                    host_port = host_bindings[0]["HostPort"]
+                    info["ports"].append(f"{host_port}:{container_port}")
+        except (KeyError, AttributeError, IndexError) as e:
+            logging.warning(f"Error getting ports for {container.name}: {e}")
 
         # Get volumes
-        for mount in container.attrs["Mounts"] or []:
-            if mount["Type"] == "bind":
-                info["volumes"].append(f"{mount['Source']}:{mount['Destination']}")
+        try:
+            for mount in container.attrs.get("Mounts") or []:
+                if mount.get("Type") == "bind":
+                    source = mount.get("Source", "unknown")
+                    destination = mount.get("Destination", "unknown")
+                    info["volumes"].append(f"{source}:{destination}")
+        except (KeyError, AttributeError) as e:
+            logging.warning(f"Error getting volumes for {container.name}: {e}")
 
         # Get environment (mask sensitive data)
-        for env_var in container.attrs["Config"]["Env"] or []:
-            if "=" in env_var:
-                key, value = env_var.split("=", 1)
-                # Simple masking for common sensitive keys
-                if any(
-                    word in key.lower()
-                    for word in ["password", "key", "token", "secret"]
-                ):
-                    value = "***MASKED***"
-                info["environment"][key] = value
+        try:
+            env_vars = container.attrs.get("Config", {}).get("Env") or []
+            for env_var in env_vars:
+                if "=" in env_var:
+                    key, value = env_var.split("=", 1)
+                    # Simple masking for common sensitive keys
+                    if any(
+                        word in key.lower()
+                        for word in ["password", "key", "token", "secret"]
+                    ):
+                        value = "***MASKED***"
+                    info["environment"][key] = value
+        except (KeyError, AttributeError) as e:
+            logging.warning(f"Error getting environment for {container.name}: {e}")
 
         containers.append(info)
 
