@@ -70,7 +70,7 @@ MOCK_CONTAINERS = [
 
 MOCK_SYSTEM_INFO = {
     "timestamp": datetime.now().isoformat(),
-    "hostname": "unraid-server", 
+    "hostname": "unraid-server",
     "unraid_version": "6.12.4",
     "guardian_version": __version__,
 }
@@ -139,7 +139,8 @@ async def containers_page(request: Request):
         system_info = get_system_info_safe()
         stats = {"system_info": system_info}
         return templates.TemplateResponse(
-            "containers.html", {"request": request, "containers": containers, "stats": stats}
+            "containers.html",
+            {"request": request, "containers": containers, "stats": stats},
         )
     except Exception as e:
         return templates.TemplateResponse(
@@ -206,7 +207,7 @@ async def list_backups(request: Request):
                 )
 
     backups.sort(key=lambda x: x["modified"], reverse=True)  # type: ignore
-    
+
     system_info = get_system_info_safe()
     stats = {"system_info": system_info}
 
@@ -231,45 +232,46 @@ async def download_file(filename: str):
 async def download_all_files():
     """Download all backup files as a zip."""
     output_dir = Path(os.getenv("OUTPUT_DIR", "/output"))
-    
+
     # Define the backup files to include
     backup_files = [
         "unraid-config.json",
-        "docker-compose.yml", 
+        "docker-compose.yml",
         "restore.sh",
-        "README.md"
+        "README.md",
     ]
-    
+
     # Check if any backup files exist
     existing_files = [f for f in backup_files if (output_dir / f).exists()]
-    
+
     if not existing_files:
         return JSONResponse(status_code=404, content={"error": "No backup files found"})
-    
+
     # Create temporary zip file
     import tempfile
+
     temp_dir = Path(tempfile.gettempdir())
-    timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
+    timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
     zip_filename = f"unraid-backup_{timestamp}.zip"
     zip_path = temp_dir / zip_filename
-    
+
     try:
-        with zipfile.ZipFile(zip_path, 'w', zipfile.ZIP_DEFLATED) as zipf:
+        with zipfile.ZipFile(zip_path, "w", zipfile.ZIP_DEFLATED) as zipf:
             for filename in existing_files:
                 file_path = output_dir / filename
                 if file_path.exists():
                     zipf.write(file_path, filename)
-        
+
         return FileResponse(
-            zip_path,
-            filename=zip_filename,
-            media_type='application/zip'
+            zip_path, filename=zip_filename, media_type="application/zip"
         )
     except Exception as e:
         # Clean up on error
         if zip_path.exists():
             zip_path.unlink()
-        return JSONResponse(status_code=500, content={"error": f"Failed to create zip: {str(e)}"})
+        return JSONResponse(
+            status_code=500, content={"error": f"Failed to create zip: {str(e)}"}
+        )
 
 
 async def run_backup(output_dir: str):

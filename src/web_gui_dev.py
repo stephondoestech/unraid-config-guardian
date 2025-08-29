@@ -123,7 +123,8 @@ async def containers_page(request: Request):
         containers = get_containers_safe()
         stats = {"system_info": MOCK_SYSTEM_INFO}
         return templates.TemplateResponse(
-            "containers.html", {"request": request, "containers": containers, "stats": stats}
+            "containers.html",
+            {"request": request, "containers": containers, "stats": stats},
         )
     except Exception as e:
         return templates.TemplateResponse(
@@ -190,7 +191,7 @@ async def list_backups(request: Request):
                 )
 
     backups.sort(key=lambda x: x["modified"], reverse=True)  # type: ignore
-    
+
     stats = {"system_info": MOCK_SYSTEM_INFO}
 
     return templates.TemplateResponse(
