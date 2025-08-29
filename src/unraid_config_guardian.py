@@ -199,23 +199,25 @@ def get_container_templates():
     """Get XML templates from Unraid's template directory."""
     templates = []
     template_dir = Path("/boot/config/plugins/dockerMan/templates-user")
-    
+
     if not template_dir.exists():
         logging.info("Template directory not found - no user templates to backup")
         return templates
-    
+
     try:
         for xml_file in template_dir.glob("*.xml"):
             if xml_file.is_file():
-                templates.append({
-                    "name": xml_file.name,
-                    "path": str(xml_file),
-                    "size": xml_file.stat().st_size
-                })
+                templates.append(
+                    {
+                        "name": xml_file.name,
+                        "path": str(xml_file),
+                        "size": xml_file.stat().st_size,
+                    }
+                )
                 logging.info(f"Found template: {xml_file.name}")
     except Exception as e:
         logging.warning(f"Error scanning templates directory: {e}")
-    
+
     return templates
 
 
@@ -223,16 +225,16 @@ def create_templates_zip(templates, output_dir):
     """Create a zip file containing all XML templates."""
     if not templates:
         return None
-    
+
     zip_path = output_dir / "container-templates.zip"
-    
+
     try:
-        with zipfile.ZipFile(zip_path, 'w', zipfile.ZIP_DEFLATED) as zipf:
+        with zipfile.ZipFile(zip_path, "w", zipfile.ZIP_DEFLATED) as zipf:
             for template in templates:
                 template_path = Path(template["path"])
                 if template_path.exists():
                     zipf.write(template_path, template["name"])
-        
+
         logging.info(f"Created templates zip: {zip_path}")
         return zip_path
     except Exception as e:

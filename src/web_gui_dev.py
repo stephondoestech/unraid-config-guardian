@@ -216,7 +216,7 @@ async def download_file(filename: str):
 async def download_all_files():
     """Download all backup files as a zip."""
     output_dir = Path(os.getenv("OUTPUT_DIR", "./output"))
-    
+
     # Define the backup files to include
     backup_files = [
         "unraid-config.json",
@@ -225,27 +225,28 @@ async def download_all_files():
         "README.md",
         "container-templates.zip",
     ]
-    
+
     # Check if any backup files exist
     existing_files = [f for f in backup_files if (output_dir / f).exists()]
-    
+
     if not existing_files:
         return JSONResponse(status_code=404, content={"error": "No backup files found"})
-    
+
     # Create temporary zip file
     import tempfile
+
     temp_dir = Path(tempfile.gettempdir())
     timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
     zip_filename = f"unraid-backup_{timestamp}.zip"
     zip_path = temp_dir / zip_filename
-    
+
     try:
         with zipfile.ZipFile(zip_path, "w", zipfile.ZIP_DEFLATED) as zipf:
             for filename in existing_files:
                 file_path = output_dir / filename
                 if file_path.exists():
                     zipf.write(file_path, filename)
-        
+
         return FileResponse(
             zip_path, filename=zip_filename, media_type="application/zip"
         )
@@ -410,7 +411,7 @@ Keep this documentation safe and test your restore process!
         # Create a mock container-templates.zip with sample XML templates
         template_zip_path = output_path / "container-templates.zip"
         try:
-            with zipfile.ZipFile(template_zip_path, 'w', zipfile.ZIP_DEFLATED) as zipf:
+            with zipfile.ZipFile(template_zip_path, "w", zipfile.ZIP_DEFLATED) as zipf:
                 # Mock Plex template
                 plex_template = """<?xml version="1.0"?>
 <Container version="2">
@@ -444,8 +445,8 @@ Keep this documentation safe and test your restore process!
   <Config Name="VERSION" Target="VERSION" Default="docker" Mode="" Description="Container Variable: VERSION" Type="Variable" Display="advanced" Required="false" Mask="false">docker</Config>
 </Container>"""
                 zipf.writestr("plex.xml", plex_template)
-                
-                # Mock Nginx template  
+
+                # Mock Nginx template
                 nginx_template = """<?xml version="1.0"?>
 <Container version="2">
   <Name>nginx</Name>
@@ -465,7 +466,7 @@ Keep this documentation safe and test your restore process!
   <Config Name="AppData Config Path" Target="/etc/nginx" Default="/mnt/user/appdata/nginx" Mode="rw" Description="Container Path: /etc/nginx" Type="Path" Display="advanced" Required="true" Mask="false">/mnt/user/appdata/nginx</Config>
 </Container>"""
                 zipf.writestr("nginx.xml", nginx_template)
-            
+
             file_count = len(files) + 1  # Include the zip file
         except Exception as e:
             print(f"Failed to create mock template zip: {e}")
