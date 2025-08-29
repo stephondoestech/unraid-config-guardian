@@ -239,6 +239,7 @@ async def download_all_files():
         "docker-compose.yml",
         "restore.sh",
         "README.md",
+        "container-templates.zip",
     ]
 
     # Check if any backup files exist

@@ -101,15 +101,18 @@
                         <h6><i class="bi bi-file-text text-primary"></i> unraid-config.json</h6>
                         <p class="small text-muted">Complete system configuration including all containers, system info, and metadata.</p>
 
+                        <h6><i class="bi bi-file-zip text-danger"></i> container-templates.zip</h6>
+                        <p class="small text-muted"><strong>NEW!</strong> XML templates for native Unraid restore. Extract to templates directory and use "Add Container".</p>
+
                         <h6><i class="bi bi-file-code text-success"></i> docker-compose.yml</h6>
-                        <p class="small text-muted">Docker Compose file to recreate all running containers with their configurations.</p>
+                        <p class="small text-muted">Docker Compose file for emergency fallback restore (not recommended for Unraid).</p>
                     </div>
                     <div class="col-md-6">
                         <h6><i class="bi bi-terminal text-warning"></i> restore.sh</h6>
-                        <p class="small text-muted">Automated restoration script to quickly deploy containers after disaster recovery.</p>
+                        <p class="small text-muted">Automated restoration script that extracts templates and provides restore options.</p>
 
                         <h6><i class="bi bi-file-text text-info"></i> README.md</h6>
-                        <p class="small text-muted">Step-by-step recovery guide with manual instructions and system overview.</p>
+                        <p class="small text-muted">Step-by-step recovery guide with both template and compose restore methods.</p>
                     </div>
                 </div>
             </div>
