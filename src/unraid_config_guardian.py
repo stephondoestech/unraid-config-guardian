@@ -44,16 +44,24 @@ def get_containers():
             try:
                 if container.image and container.image.tags:
                     image_name = container.image.tags[0]
-                elif hasattr(container, 'attrs') and container.attrs.get('Config', {}).get('Image'):
+                elif hasattr(container, "attrs") and container.attrs.get(
+                    "Config", {}
+                ).get("Image"):
                     # Fallback to image name from container config
-                    image_name = container.attrs['Config']['Image']
-            except (docker.errors.ImageNotFound, docker.errors.NotFound, AttributeError):
+                    image_name = container.attrs["Config"]["Image"]
+            except (
+                docker.errors.ImageNotFound,
+                docker.errors.NotFound,
+                AttributeError,
+            ):
                 # Image was deleted or not found, try to get from container attrs
-                if hasattr(container, 'attrs') and container.attrs.get('Config', {}).get('Image'):
-                    image_name = container.attrs['Config']['Image']
+                if hasattr(container, "attrs") and container.attrs.get(
+                    "Config", {}
+                ).get("Image"):
+                    image_name = container.attrs["Config"]["Image"]
                 else:
                     image_name = f"missing-image-{container.id[:12]}"
-            
+
             info = {
                 "name": container.name,
                 "image": image_name,
