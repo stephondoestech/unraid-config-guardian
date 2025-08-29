@@ -18,6 +18,7 @@ from typing import List
 import yaml
 
 import docker
+from version import __version__
 
 # Removed unused imports: Any, Dict, List
 
@@ -120,28 +121,28 @@ def generate_compose(containers):
     compose = {"version": "3.8", "services": {}}
 
     for container in containers:
-        if container["status"] == "running":
-            service_name = container["name"].replace("_", "-")
-            service = {
-                "image": container["image"],
-                "container_name": container["name"],
-                "restart": "unless-stopped",
-            }
+        # Include all containers regardless of status
+        service_name = container["name"].replace("_", "-")
+        service = {
+            "image": container["image"],
+            "container_name": container["name"],
+            "restart": "unless-stopped",
+        }
 
-            if container["ports"]:
-                service["ports"] = container["ports"]
+        if container["ports"]:
+            service["ports"] = container["ports"]
 
-            if container["volumes"]:
-                service["volumes"] = container["volumes"]
+        if container["volumes"]:
+            service["volumes"] = container["volumes"]
 
-            # Only add non-masked environment variables
-            clean_env = {
-                k: v for k, v in container["environment"].items() if v != "***MASKED***"
-            }
-            if clean_env:
-                service["environment"] = clean_env
+        # Only add non-masked environment variables
+        clean_env = {
+            k: v for k, v in container["environment"].items() if v != "***MASKED***"
+        }
+        if clean_env:
+            service["environment"] = clean_env
 
-            compose["services"][service_name] = service
+        compose["services"][service_name] = service
 
     return compose
 
@@ -171,6 +172,7 @@ def get_system_info():
     info = {
         "timestamp": datetime.now().isoformat(),
         "hostname": hostname,
+        "guardian_version": __version__,
     }
 
     # Try to get Unraid version from mounted /boot directory

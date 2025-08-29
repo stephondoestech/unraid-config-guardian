@@ -14,6 +14,9 @@ from fastapi import BackgroundTasks, FastAPI, Form, Request
 from fastapi.responses import FileResponse, HTMLResponse, JSONResponse
 from fastapi.templating import Jinja2Templates
 
+# Import version info
+from version import __version__
+
 # Mock container data for development when Docker isn't available
 MOCK_CONTAINERS = [
     {
@@ -46,6 +49,7 @@ MOCK_SYSTEM_INFO = {
     "timestamp": datetime.now().isoformat(),
     "hostname": "unraid-server",
     "unraid_version": "6.12.4",
+    "guardian_version": __version__,
 }
 
 app = FastAPI(
@@ -117,8 +121,9 @@ async def containers_page(request: Request):
     """Containers overview page."""
     try:
         containers = get_containers_safe()
+        stats = {"system_info": MOCK_SYSTEM_INFO}
         return templates.TemplateResponse(
-            "containers.html", {"request": request, "containers": containers}
+            "containers.html", {"request": request, "containers": containers, "stats": stats}
         )
     except Exception as e:
         return templates.TemplateResponse(
@@ -185,9 +190,11 @@ async def list_backups(request: Request):
                 )
 
     backups.sort(key=lambda x: x["modified"], reverse=True)  # type: ignore
+    
+    stats = {"system_info": MOCK_SYSTEM_INFO}
 
     return templates.TemplateResponse(
-        "backups.html", {"request": request, "backups": backups}
+        "backups.html", {"request": request, "backups": backups, "stats": stats}
     )
 
 

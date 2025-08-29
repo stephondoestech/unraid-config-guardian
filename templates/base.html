@@ -48,6 +48,7 @@
                     </li>
                 </ul>
                 <span class="navbar-text">
+                    <small class="me-3 text-muted">v{{ stats.system_info.get('guardian_version', 'unknown') if stats and stats.system_info else 'unknown' }}</small>
                     <span id="status-indicator" class="badge bg-secondary">Ready</span>
                 </span>
             </div>
