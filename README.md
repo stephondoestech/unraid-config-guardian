@@ -205,4 +205,6 @@ This project is licensed under the **MIT License** - see the [LICENSE](LICENSE) 
 
 **Built by [Stephon Parker](https://github.com/stephondoestech) for the Unraid community**
 
+*Development supported by Claude (Anthropic)*
+
 [⭐ Star](https://github.com/stephondoestech/unraid-config-guardian/stargazers) | [🐛 Issues](https://github.com/stephondoestech/unraid-config-guardian/issues) | [💡 Features](https://github.com/stephondoestech/unraid-config-guardian/issues)
