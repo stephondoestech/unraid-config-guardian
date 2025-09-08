@@ -39,15 +39,15 @@ RUN mkdir -p /config /output && \
 COPY docker/entrypoint.sh /entrypoint.sh
 RUN chmod +x /entrypoint.sh
 
-# For development, we might need to run as current user
-# USER guardian
+# Run as non-root user for security
+USER guardian
 
 # Health check
 HEALTHCHECK --interval=30s --timeout=10s --start-period=5s --retries=3 \
     CMD python src/health_check.py || exit 1
 
 # Expose port for web interface (if implemented)
-EXPOSE 8080
+EXPOSE 7842
 
 # Set entrypoint
 ENTRYPOINT ["/entrypoint.sh"]
