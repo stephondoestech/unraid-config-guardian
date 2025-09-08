@@ -18,7 +18,7 @@ make install-dev
 make check
 
 # Start development server
-make run-gui  # Web GUI at http://localhost:8080
+make run-gui  # Web GUI at http://localhost:7842
 # OR
 make run      # CLI version
 ```

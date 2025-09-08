@@ -38,6 +38,7 @@ Automatically generate comprehensive disaster recovery documentation for your Un
 
 1. **Via Community Apps (Coming Soon):**
    - Apps → Search → "Config Guardian" → Install
+   - **Required:** Install "dockersocket" from Apps page, add variable `IMAGES=1` (prevents 403 errors)
 
 2. **Manual Docker Command:**
 ```bash
@@ -48,7 +49,7 @@ mkdir -p /mnt/user/backups/unraid-docs
 docker run -d \
   --name unraid-config-guardian \
   --restart unless-stopped \
-  -p 7842:8080 \
+  -p 7842:7842 \
   -v /mnt/user/appdata/unraid-config-guardian:/config \
   -v /mnt/user/backups/unraid-docs:/output \
   -v /var/run/docker.sock:/var/run/docker.sock:ro \

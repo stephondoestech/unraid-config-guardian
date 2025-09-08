@@ -26,13 +26,17 @@ from version import __version__
 def get_containers():
     """Get all Docker containers and their info."""
     try:
-        client = docker.from_env()
+        # Use Docker Socket Proxy instead of direct socket access
+        docker_host = os.getenv("DOCKER_HOST", "tcp://docker-socket-proxy:2375")
+        client = docker.DockerClient(base_url=docker_host)
         # Test Docker connectivity
         client.ping()
     except Exception as e:
         logging.error(f"Cannot connect to Docker daemon: {e}")
-        logging.error("Make sure Docker is running and the socket is accessible")
-        logging.error("For Unraid: Ensure container has access to /var/run/docker.sock")
+        logging.error("Make sure Docker Socket Proxy is running and accessible")
+        logging.error(
+            f"Current DOCKER_HOST: {os.getenv('DOCKER_HOST', 'tcp://docker-socket-proxy:2375')}"
+        )
         raise
 
     containers = []

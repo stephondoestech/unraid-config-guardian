@@ -409,7 +409,7 @@ def get_last_backup_info():
 
 def main():
     """Run the web server."""
-    port = int(os.getenv("WEB_PORT", 8080))
+    port = int(os.getenv("WEB_PORT", 7842))
     host = os.getenv("WEB_HOST", "0.0.0.0")
 
     print(f"🌐 Starting Unraid Config Guardian Web GUI on http://{host}:{port}")

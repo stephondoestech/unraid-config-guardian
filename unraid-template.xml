@@ -19,6 +19,8 @@ Features:
  - Automated restoration scripts with security-conscious data masking
  - Web-based interface for easy management
  - Scheduled automated backups
+
+***Install the dockersocket container from the apps page. You will need to add a variable to the container called IMAGES and give it a value of 1. The docker socket proxy will return a 403 without this.***
  
 Access the web interface at http://your-unraid-ip:7842</Overview>
   <Category>Backup:</Category>
@@ -31,8 +33,8 @@ Access the web interface at http://your-unraid-ip:7842</Overview>
   <DateInstalled>1756410488</DateInstalled>
   <DonateText/>
   <DonateLink/>
-  <Requires>***PUID AND PGID SET TO ROOT FOR DOCKER SOCKET ACCESS***</Requires>
-  <Config Name="Web UI Port" Target="8080" Default="7842" Mode="tcp" Description="Port for web interface" Type="Port" Display="always" Required="true" Mask="false">7842</Config>
+  <Requires>***THIS REQUIRES THE dockersocket APP FROM THE APP STORE TO RUN***</Requires>
+  <Config Name="Web UI Port" Target="7842" Default="7842" Mode="tcp" Description="Port for web interface" Type="Port" Display="always" Required="true" Mask="false">7842</Config>
   <Config Name="AppData" Target="/config" Default="/mnt/user/appdata/unraid-config-guardian" Mode="rw" Description="Application configuration" Type="Path" Display="always" Required="true" Mask="false">/mnt/user/appdata/unraid-config-guardian</Config>
   <Config Name="Output Directory" Target="/output" Default="/mnt/user/backups/unraid-docs" Mode="rw" Description="Generated backup files location" Type="Path" Display="always" Required="true" Mask="false">/mnt/user/backups/unraid-docs</Config>
   <Config Name="Unraid Flash Drive" Target="/boot" Default="/boot" Mode="ro" Description="Unraid flash drive for system configuration" Type="Path" Display="always" Required="true" Mask="false">/boot</Config>

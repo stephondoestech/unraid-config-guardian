@@ -90,7 +90,7 @@ run: ## Run the application locally (CLI)
 	$(PYTHON) src/unraid_config_guardian.py --output ./output --debug
 
 run-gui: ## Run the web GUI locally
-	@echo "$(BLUE)Starting Web GUI on http://localhost:8080$(NC)"
+	@echo "$(BLUE)Starting Web GUI on http://localhost:7842$(NC)"
 	mkdir -p ./output
 	$(PYTHON) src/web_gui_dev.py
 
