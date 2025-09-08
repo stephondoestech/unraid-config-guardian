@@ -265,13 +265,13 @@ echo "🔄 Restoring Unraid setup..."
 restore_templates() {{
     if [ -f "container-templates.zip" ]; then
         echo "📋 Restoring XML templates..."
-        
+
         # Create target directory if it doesn't exist
         mkdir -p /boot/config/plugins/dockerMan/templates-user
-        
+
         # Extract templates
         unzip -o container-templates.zip -d /boot/config/plugins/dockerMan/templates-user
-        
+
         if [ $? -eq 0 ]; then
             echo "✅ XML templates restored to /boot/config/plugins/dockerMan/templates-user"
             echo "ℹ️  Templates will appear in 'Add Container' dropdown"
@@ -288,16 +288,18 @@ restore_with_compose() {{
     if [ -f "docker-compose.yml" ]; then
         echo ""
         echo "🐳 Attempting docker-compose restore (fallback method)..."
-        
+
         if command -v docker-compose &> /dev/null; then
             docker-compose up -d
             echo "✅ Containers started with docker-compose"
         elif docker compose version &> /dev/null; then
-            docker compose up -d  
+            docker compose up -d
             echo "✅ Containers started with docker compose"
         else
             echo "❌ Docker Compose not available"
-            echo "💡 Install with: curl -L 'https://github.com/docker/compose/releases/latest/download/docker-compose-$(uname -s)-$(uname -m)' -o /usr/local/bin/docker-compose && chmod +x /usr/local/bin/docker-compose"
+            echo "💡 Install with: curl -L 'https://github.com/docker/compose/releases/" \
+                 "latest/download/docker-compose-$(uname -s)-$(uname -m)' " \
+                 "-o /usr/local/bin/docker-compose && chmod +x /usr/local/bin/docker-compose"
             return 1
         fi
     fi
@@ -320,7 +322,7 @@ echo "✅ Restore process complete!"
 echo ""
 echo "📋 NEXT STEPS:"
 echo "  1. Go to Docker tab in Unraid WebUI"
-echo "  2. Click 'Add Container'"  
+echo "  2. Click 'Add Container'"
 echo "  3. Select your templates from 'Template' dropdown"
 echo "  4. Configure paths/settings as needed"
 echo "  5. Restore appdata from backup"
@@ -354,7 +356,7 @@ def create_readme(system_info, container_count):
 
 - `unraid-config.json` - Complete system configuration
 - `container-templates.zip` - XML templates for native Unraid restore
-- `docker-compose.yml` - Fallback container definitions  
+- `docker-compose.yml` - Fallback container definitions
 - `restore.sh` - Automated restoration script
 - `README.md` - This file
 

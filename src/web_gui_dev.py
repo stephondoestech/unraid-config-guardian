@@ -366,7 +366,7 @@ echo "📋 Next: Go to Docker tab → Add Container → Select templates"
 """,
             "README.md": """# Unraid Backup Documentation
 
-**Generated:** Mock Development Data  
+**Generated:** Mock Development Data
 **Server:** unraid-server
 **Containers:** 3
 
@@ -383,7 +383,7 @@ echo "📋 Next: Go to Docker tab → Add Container → Select templates"
 
 - `unraid-config.json` - Complete system configuration
 - `container-templates.zip` - XML templates for native Unraid restore
-- `docker-compose.yml` - Fallback container definitions  
+- `docker-compose.yml` - Fallback container definitions
 - `restore.sh` - Automated restoration script
 - `README.md` - This file
 
@@ -395,7 +395,7 @@ bash restore.sh  # Extracts templates to /boot/config/plugins/dockerMan/template
 ```
 Then use Unraid WebUI to add containers from templates.
 
-### Method 2: Docker Compose (Emergency Fallback)  
+### Method 2: Docker Compose (Emergency Fallback)
 ```bash
 docker-compose up -d  # Or: docker compose up -d
 ```
@@ -436,13 +436,28 @@ Keep this documentation safe and test your restore process!
   <DonateText>Donations</DonateText>
   <DonateLink>https://www.linuxserver.io/donate</DonateLink>
   <Requires/>
-  <Config Name="WebUI" Target="32400" Default="32400" Mode="tcp" Description="Container Port: 32400" Type="Port" Display="always" Required="true" Mask="false">32400</Config>
-  <Config Name="Plex Media Server" Target="32400" Default="32400" Mode="tcp" Description="Container Port: 32400" Type="Port" Display="always" Required="true" Mask="false">32400</Config>
-  <Config Name="AppData Config Path" Target="/config" Default="/mnt/user/appdata/plex" Mode="rw" Description="Container Path: /config" Type="Path" Display="advanced" Required="true" Mask="false">/mnt/user/appdata/plex</Config>
-  <Config Name="Media" Target="/media" Default="/mnt/user/media" Mode="rw" Description="Container Path: /media" Type="Path" Display="always" Required="true" Mask="false">/mnt/user/media</Config>
-  <Config Name="PUID" Target="PUID" Default="99" Mode="" Description="Container Variable: PUID" Type="Variable" Display="advanced" Required="true" Mask="false">99</Config>
-  <Config Name="PGID" Target="PGID" Default="100" Mode="" Description="Container Variable: PGID" Type="Variable" Display="advanced" Required="true" Mask="false">100</Config>
-  <Config Name="VERSION" Target="VERSION" Default="docker" Mode="" Description="Container Variable: VERSION" Type="Variable" Display="advanced" Required="false" Mask="false">docker</Config>
+  <Config Name="WebUI" Target="32400" Default="32400" Mode="tcp" \
+         Description="Container Port: 32400" Type="Port" Display="always" \
+         Required="true" Mask="false">32400</Config>
+  <Config Name="Plex Media Server" Target="32400" Default="32400" Mode="tcp" \
+         Description="Container Port: 32400" Type="Port" Display="always" \
+         Required="true" Mask="false">32400</Config>
+  <Config Name="AppData Config Path" Target="/config" \
+         Default="/mnt/user/appdata/plex" Mode="rw" \
+         Description="Container Path: /config" Type="Path" Display="advanced" \
+         Required="true" Mask="false">/mnt/user/appdata/plex</Config>
+  <Config Name="Media" Target="/media" Default="/mnt/user/media" Mode="rw" \
+         Description="Container Path: /media" Type="Path" Display="always" \
+         Required="true" Mask="false">/mnt/user/media</Config>
+  <Config Name="PUID" Target="PUID" Default="99" Mode="" \
+         Description="Container Variable: PUID" Type="Variable" Display="advanced" \
+         Required="true" Mask="false">99</Config>
+  <Config Name="PGID" Target="PGID" Default="100" Mode="" \
+         Description="Container Variable: PGID" Type="Variable" Display="advanced" \
+         Required="true" Mask="false">100</Config>
+  <Config Name="VERSION" Target="VERSION" Default="docker" Mode="" \
+         Description="Container Variable: VERSION" Type="Variable" Display="advanced" \
+         Required="false" Mask="false">docker</Config>
 </Container>"""
                 zipf.writestr("plex.xml", plex_template)
 
@@ -462,8 +477,13 @@ Keep this documentation safe and test your restore process!
   <Category>Network:Web</Category>
   <WebUI>http://[IP]:[PORT:80]/</WebUI>
   <Icon>https://raw.githubusercontent.com/A75G/docker-templates/master/templates/icons/nginx.png</Icon>
-  <Config Name="WebUI" Target="80" Default="8080" Mode="tcp" Description="Container Port: 80" Type="Port" Display="always" Required="true" Mask="false">8080</Config>
-  <Config Name="AppData Config Path" Target="/etc/nginx" Default="/mnt/user/appdata/nginx" Mode="rw" Description="Container Path: /etc/nginx" Type="Path" Display="advanced" Required="true" Mask="false">/mnt/user/appdata/nginx</Config>
+  <Config Name="WebUI" Target="80" Default="8080" Mode="tcp" \
+         Description="Container Port: 80" Type="Port" Display="always" \
+         Required="true" Mask="false">8080</Config>
+  <Config Name="AppData Config Path" Target="/etc/nginx" \
+         Default="/mnt/user/appdata/nginx" Mode="rw" \
+         Description="Container Path: /etc/nginx" Type="Path" Display="advanced" \
+         Required="true" Mask="false">/mnt/user/appdata/nginx</Config>
 </Container>"""
                 zipf.writestr("nginx.xml", nginx_template)
 
