@@ -34,7 +34,7 @@ def get_containers():
             # Production - use Docker Socket Proxy
             docker_host = os.getenv("DOCKER_HOST", "tcp://docker-socket-proxy:2375")
             client = docker.DockerClient(base_url=docker_host)
-        
+
         # Test Docker connectivity
         client.ping()
     except Exception as e:
