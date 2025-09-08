@@ -26,9 +26,15 @@ from version import __version__
 def get_containers():
     """Get all Docker containers and their info."""
     try:
-        # Use Docker Socket Proxy instead of direct socket access
-        docker_host = os.getenv("DOCKER_HOST", "tcp://docker-socket-proxy:2375")
-        client = docker.DockerClient(base_url=docker_host)
+        # For local testing/CI, use direct Docker socket; for production, use proxy
+        if os.getenv("PYTEST_CURRENT_TEST") or not os.getenv("DOCKER_HOST"):
+            # Local testing - use direct Docker socket
+            client = docker.from_env()
+        else:
+            # Production - use Docker Socket Proxy
+            docker_host = os.getenv("DOCKER_HOST", "tcp://docker-socket-proxy:2375")
+            client = docker.DockerClient(base_url=docker_host)
+        
         # Test Docker connectivity
         client.ping()
     except Exception as e:
