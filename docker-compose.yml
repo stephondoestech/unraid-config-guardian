@@ -30,8 +30,7 @@ services:
       # Output directory for generated documentation
       - /mnt/user/backups/unraid-docs:/output
 
-      # Docker socket for container inspection (read-only)
-      - /var/run/docker.sock:/var/run/docker.sock:ro
+      # Docker socket proxy connection (requires docker-socket-proxy container)
 
       # Unraid flash drive configuration (read-only)
       - /boot:/boot:ro
@@ -45,7 +44,7 @@ services:
 
     # Web interface port
     ports:
-      - "7842:8080"
+      - "7842:7842"
 
     # Security settings
     security_opt:

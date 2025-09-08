@@ -106,7 +106,7 @@ docker buildx build --platform linux/amd64,linux/arm64 \
 docker run -d \
   --name unraid-config-guardian \
   --restart unless-stopped \
-  -p 7842:8080 \
+  -p 7842:7842 \
   -v /mnt/user/appdata/unraid-config-guardian:/config \
   -v /mnt/user/backups/unraid-docs:/output \
   -v /var/run/docker.sock:/var/run/docker.sock:ro \
@@ -217,7 +217,7 @@ cat /mnt/user/backups/unraid-docs/unraid-config.json | jq .
 - Ensure container has Docker access
 
 **Web UI not accessible:**
-- Check port mapping: `7842:8080`
+- Check port mapping: `7842:7842`
 - Verify firewall settings
 - Check Unraid network configuration
 
