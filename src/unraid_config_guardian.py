@@ -11,6 +11,7 @@ import json
 import logging
 import os
 import subprocess
+import zipfile
 from datetime import datetime
 from pathlib import Path
 from typing import List
@@ -204,8 +205,55 @@ def get_system_info():
     return info
 
 
+def get_container_templates():
+    """Get XML templates from Unraid's template directory."""
+    templates = []
+    template_dir = Path("/boot/config/plugins/dockerMan/templates-user")
+
+    if not template_dir.exists():
+        logging.info("Template directory not found - no user templates to backup")
+        return templates
+
+    try:
+        for xml_file in template_dir.glob("*.xml"):
+            if xml_file.is_file():
+                templates.append(
+                    {
+                        "name": xml_file.name,
+                        "path": str(xml_file),
+                        "size": xml_file.stat().st_size,
+                    }
+                )
+                logging.info(f"Found template: {xml_file.name}")
+    except Exception as e:
+        logging.warning(f"Error scanning templates directory: {e}")
+
+    return templates
+
+
+def create_templates_zip(templates, output_dir):
+    """Create a zip file containing all XML templates."""
+    if not templates:
+        return None
+
+    zip_path = output_dir / "container-templates.zip"
+
+    try:
+        with zipfile.ZipFile(zip_path, "w", zipfile.ZIP_DEFLATED) as zipf:
+            for template in templates:
+                template_path = Path(template["path"])
+                if template_path.exists():
+                    zipf.write(template_path, template["name"])
+
+        logging.info(f"Created templates zip: {zip_path}")
+        return zip_path
+    except Exception as e:
+        logging.error(f"Error creating templates zip: {e}")
+        return None
+
+
 def create_restore_script(system_info):
-    """Create simple restoration script."""
+    """Create restore script for Unraid-native workflow."""
     return f"""#!/bin/bash
 # Unraid Config Guardian - Restore Script
 # Generated: {system_info['timestamp']}
@@ -213,26 +261,77 @@ def create_restore_script(system_info):
 
 echo "🔄 Restoring Unraid setup..."
 
-# Check prerequisites
-if ! command -v docker-compose &> /dev/null; then
-    echo "❌ docker-compose not found"
-    exit 1
+# Function to restore XML templates
+restore_templates() {{
+    if [ -f "container-templates.zip" ]; then
+        echo "📋 Restoring XML templates..."
+
+        # Create target directory if it doesn't exist
+        mkdir -p /boot/config/plugins/dockerMan/templates-user
+
+        # Extract templates
+        unzip -o container-templates.zip -d /boot/config/plugins/dockerMan/templates-user
+
+        if [ $? -eq 0 ]; then
+            echo "✅ XML templates restored to /boot/config/plugins/dockerMan/templates-user"
+            echo "ℹ️  Templates will appear in 'Add Container' dropdown"
+        else
+            echo "❌ Failed to extract templates"
+        fi
+    else
+        echo "ℹ️  No container-templates.zip found - skipping template restore"
+    fi
+}}
+
+# Function to attempt docker-compose restore (fallback option)
+restore_with_compose() {{
+    if [ -f "docker-compose.yml" ]; then
+        echo ""
+        echo "🐳 Attempting docker-compose restore (fallback method)..."
+
+        if command -v docker-compose &> /dev/null; then
+            docker-compose up -d
+            echo "✅ Containers started with docker-compose"
+        elif docker compose version &> /dev/null; then
+            docker compose up -d
+            echo "✅ Containers started with docker compose"
+        else
+            echo "❌ Docker Compose not available"
+            echo "💡 Install with: curl -L 'https://github.com/docker/compose/releases/" \
+                 "latest/download/docker-compose-$(uname -s)-$(uname -m)' " \
+                 "-o /usr/local/bin/docker-compose && chmod +x /usr/local/bin/docker-compose"
+            return 1
+        fi
+    fi
+}}
+
+# Main restore process
+echo "📋 UNRAID RESTORE OPTIONS:"
+echo ""
+echo "Option 1: Restore XML Templates (Recommended)"
+restore_templates
+
+echo ""
+echo "Option 2: Docker-Compose Fallback (Emergency only)"
+if restore_with_compose; then
+    echo "⚠️  Warning: These containers bypass Unraid's management system"
 fi
 
-if [ ! -f "docker-compose.yml" ]; then
-    echo "❌ docker-compose.yml not found"
-    exit 1
-fi
-
-# Start containers
-echo "📦 Starting containers..."
-docker-compose up -d
-
-echo "✅ Restore complete!"
-echo "📋 Next steps:"
-echo "  1. Restore your appdata from backup"
-echo "  2. Check container status: docker-compose ps"
-echo "  3. Test your services"
+echo ""
+echo "✅ Restore process complete!"
+echo ""
+echo "📋 NEXT STEPS:"
+echo "  1. Go to Docker tab in Unraid WebUI"
+echo "  2. Click 'Add Container'"
+echo "  3. Select your templates from 'Template' dropdown"
+echo "  4. Configure paths/settings as needed"
+echo "  5. Restore appdata from backup"
+echo ""
+echo "💡 TIPS:"
+echo "  - Enable 'Template Authoring Mode' in Docker settings for full template access"
+echo "  - Use unraid-config.json for reference settings"
+echo "  - Templates provide better integration than docker-compose"
+echo "  - Templates support Unraid's auto-start, updates, and management features"
 """
 
 
@@ -244,27 +343,37 @@ def create_readme(system_info, container_count):
 **Server:** {system_info['hostname']}
 **Containers:** {container_count}
 
-## Quick Recovery
+## Quick Recovery (Recommended: Unraid Templates)
 
 1. Install fresh Unraid
 2. Restore flash drive from backup
 3. Set up disk array
-4. Run: `bash restore.sh`
-5. Restore appdata from backup
+4. Run: `bash restore.sh` (restores XML templates)
+5. Go to Docker tab → Add Container → Select your templates
+6. Configure paths and restore appdata from backup
 
 ## Files
 
-- `unraid-config.json` - Complete configuration
-- `docker-compose.yml` - Container definitions
-- `restore.sh` - Restoration script
+- `unraid-config.json` - Complete system configuration
+- `container-templates.zip` - XML templates for native Unraid restore
+- `docker-compose.yml` - Fallback container definitions
+- `restore.sh` - Automated restoration script
 - `README.md` - This file
 
-## Manual Recovery
+## Restore Methods
 
+### Method 1: Native Unraid Templates (Recommended)
 ```bash
-docker-compose up -d
+bash restore.sh  # Extracts templates to /boot/config/plugins/dockerMan/templates-user
+```
+Then use Unraid WebUI to add containers from templates.
+
+### Method 2: Docker Compose (Emergency Fallback)
+```bash
+docker-compose up -d  # Or: docker compose up -d
 docker-compose ps
 ```
+Note: Bypasses Unraid's container management system.
 
 Keep this documentation safe and test your restore process!
 """
@@ -321,6 +430,9 @@ def main():
         logger.info("🖥️  Collecting system information...")
         system_info = get_system_info()
 
+        logger.info("📋 Collecting XML templates...")
+        templates = get_container_templates()
+
         logger.info("📝 Generating docker-compose configuration...")
         compose = generate_compose(containers)
 
@@ -345,6 +457,14 @@ def main():
 
         # Make restore script executable
         os.chmod(output_dir / "restore.sh", 0o755)
+
+        # Create templates zip if templates exist
+        if templates:
+            logger.info("📦 Creating container templates zip...")
+            create_templates_zip(templates, output_dir)
+            logger.info(f"✅ Found {len(templates)} XML templates")
+        else:
+            logger.info("ℹ️  No XML templates found to backup")
 
         logger.info(f"🎉 Documentation generated in {output_dir}")
         logger.info(f"📦 Found {len(containers)} containers")

@@ -76,7 +76,8 @@ make docker-dev  # Access at http://localhost:7842
 ```
 unraid-backup/
 ├── unraid-config.json      # Complete system configuration
-├── docker-compose.yml      # All containers ready for deployment
+├── container-templates.zip # XML templates for native Unraid restore
+├── docker-compose.yml      # Fallback container definitions  
 ├── restore.sh             # Automated restoration script
 ├── README.md               # Step-by-step recovery guide
 ├── secrets.env.example     # Template for sensitive variables
@@ -97,17 +98,31 @@ unraid-backup/
    ```bash
    bash restore.sh
    ```
-5. **Restore your appdata** from backup
-6. **Verify containers:** `docker-compose ps`
+5. **Add containers via Unraid WebUI:**
+   - Go to Docker tab → "Add Container"
+   - Select your templates from dropdown
+   - Configure paths and settings
+6. **Restore your appdata** from backup
+
+### Restore Methods
+
+**✅ Native Unraid Templates (Recommended)**
+- Uses your original XML templates from `/boot/config/plugins/dockerMan/templates-user`
+- Full Unraid integration (auto-start, updates, WebUI management)
+- Requires Template Authoring Mode enabled
+
+**⚠️ Docker Compose (Emergency Fallback)**
+- Direct container deployment bypassing Unraid's system
+- Use only when templates aren't available
+- Run `docker-compose ps` to verify
 
 ### Common Issues
 
-- **Missing docker-compose:** Install it first
+- **No templates in dropdown:** Enable Template Authoring Mode in Docker settings
 - **Permission errors:** Run `chmod +x restore.sh`
-- **Container failures:** Check logs with `docker logs <container>`
-- **Missing passwords:** Edit `secrets.env.example` and save as `.env`
+- **Template extraction fails:** Check `/boot` mount is available
 
-The generated files contain everything needed to recreate your setup. Store backups offsite and test the restore process!
+**💡 Pro Tip:** The XML template method provides the best Unraid experience and maintains all native features!
 
 ## ✨ Key Features
 
