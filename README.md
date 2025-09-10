@@ -88,7 +88,7 @@ unraid-backup/
 ### Quick Restore Process
 
 1. **Install fresh Unraid** on new hardware
-2. **Set up disk array** and basic configuration  
+2. **Set up disk array** and basic configuration
 3. **Navigate to backup location:**
    ```bash
    cd /mnt/user/backups/unraid-docs/latest

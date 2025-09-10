@@ -9,7 +9,7 @@
   <Privileged>false</Privileged>
   <Support>https://forums.unraid.net/topic/193147-support-stephondoestech-unraidconfigguardian/</Support>
   <Project>https://github.com/stephondoestech/unraid-config-guardian</Project>
-  <Overview>Automatically generate comprehensive disaster recovery documentation for your Unraid setup. Creates docker-compose files, restoration scripts, and system backups for complete server recreation in under 30 minutes. 
+  <Overview>Automatically generate comprehensive disaster recovery documentation for your Unraid setup. Creates docker-compose files, restoration scripts, and system backups for complete server recreation in under 30 minutes.
 
 Unraid Config Guardian automatically generates comprehensive disaster recovery documentation for your Unraid setup.
 
@@ -21,7 +21,7 @@ Features:
  - Scheduled automated backups
 
 ***Install the dockersocket container from the apps page. You will need to add a variable to the container called IMAGES and give it a value of 1. The docker socket proxy will return a 403 without this.***
- 
+
 Access the web interface at http://your-unraid-ip:7842</Overview>
   <Category>Backup:</Category>
   <WebUI>http://[IP]:[PORT:7842]</WebUI>
@@ -44,6 +44,6 @@ Access the web interface at http://your-unraid-ip:7842</Overview>
   <Config Name="Backup Schedule" Target="SCHEDULE" Default="0 2 * * 0" Mode="" Description="Cron schedule for automated backups (Sunday 2 AM)" Type="Variable" Display="always" Required="false" Mask="false">0 2 * * 0</Config>
   <Config Name="Mask Passwords" Target="MASK_PASSWORDS" Default="true" Mode="" Description="Hide sensitive environment variables" Type="Variable" Display="always" Required="false" Mask="false">true</Config>
   <Config Name="Include System Info" Target="INCLUDE_SYSTEM_INFO" Default="true" Mode="" Description="Include system information in backup" Type="Variable" Display="always" Required="false" Mask="false">true</Config>
-  <Config Name="DOCKER HOST" Target="DOCKER_HOST" Default="" Mode="" Description="" Type="Variable" Display="always" Required="false" Mask="false">tcp://your-unraid-ip:2375</Config>
+  <Config Name="DOCKER HOST" Target="DOCKER_HOST" Default="" Mode="" Description="" Type="Variable" Display="always" Required="false" Mask="false">tcp://dockersocket-ip:2375</Config>
   <TailscaleStateDir/>
 </Container>
