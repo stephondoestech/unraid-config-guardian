@@ -37,7 +37,10 @@ install-dev: install ## Install development dependencies
 	@echo "$(BLUE)Installing development dependencies...$(NC)"
 	$(PIP) install -r requirements-dev.txt
 	@echo "$(BLUE)Setting up pre-commit hooks...$(NC)"
-	pre-commit install
+	pre-commit install --install-hooks
+	@echo "$(BLUE)Installing custom pre-push hook...$(NC)"
+	cp .githooks/pre-push .git/hooks/pre-push
+	chmod +x .git/hooks/pre-push
 	@echo "$(GREEN)Development environment ready!$(NC)"
 
 # Code Quality
@@ -61,6 +64,15 @@ format-fix: ## Auto-fix all formatting and linting issues
 	isort src/ tests/
 	@echo "$(GREEN)Auto-formatting complete!$(NC)"
 	@echo "$(YELLOW)Run 'make lint' to see remaining issues$(NC)"
+
+install-hooks: ## Install git hooks manually
+	@echo "$(BLUE)Installing pre-commit hooks...$(NC)"
+	pre-commit install --install-hooks
+	@echo "$(BLUE)Installing custom pre-push hook...$(NC)"
+	cp .githooks/pre-push .git/hooks/pre-push
+	chmod +x .git/hooks/pre-push
+	@echo "$(GREEN)Git hooks installed!$(NC)"
+	@echo "$(YELLOW)Pre-commit will run on commits, pre-push will auto-fix formatting before pushes$(NC)"
 
 pre-commit-run: ## Run all pre-commit hooks
 	@echo "$(BLUE)Running pre-commit hooks...$(NC)"
@@ -196,7 +208,13 @@ ci-push: ## Push to Docker Hub (used by GitHub Actions)
 tag: ## Create and push a new tag (usage: make tag VERSION=v1.0.0)
 	@if [ -z "$(VERSION)" ]; then echo "Usage: make tag VERSION=v1.0.0"; exit 1; fi
 	@echo "$(BLUE)Creating tag $(VERSION)...$(NC)"
-	git tag -a $(VERSION) -m "Release $(VERSION)"
+	@VERSION_NUM=$$(echo $(VERSION) | sed 's/^v//'); \
+	echo "Updating src/version.py to $$VERSION_NUM"; \
+	sed -i '' "s/__version__ = \".*\"/__version__ = \"$$VERSION_NUM\"/" src/version.py; \
+	git add src/version.py; \
+	git commit -m "Update version to $$VERSION_NUM"; \
+	git tag -a $(VERSION) -m "Release $(VERSION)"; \
+	git push origin main; \
 	git push origin $(VERSION)
 	@echo "$(GREEN)Tag $(VERSION) created and pushed!$(NC)"
 	@echo "$(YELLOW)GitHub Actions will automatically:$(NC)"
@@ -215,6 +233,33 @@ release-patch: ## Create patch release (v1.0.0 -> v1.0.1)
 		PATCH=$$(echo $$LATEST | cut -d. -f3); \
 		NEW_PATCH=$$((PATCH + 1)); \
 		NEW_VERSION="$$MAJOR.$$MINOR.$$NEW_PATCH"; \
+	fi; \
+	echo "Next version: $$NEW_VERSION"; \
+	make tag VERSION=$$NEW_VERSION
+
+release-minor: ## Create minor release (v1.0.x -> v1.1.0)
+	@echo "$(BLUE)Creating minor release...$(NC)"
+	@LATEST=$$(git tag -l "v*.*.*" | sort -V | tail -1); \
+	if [ -z "$$LATEST" ]; then \
+		NEW_VERSION="v1.0.0"; \
+	else \
+		MAJOR=$$(echo $$LATEST | cut -d. -f1); \
+		MINOR=$$(echo $$LATEST | cut -d. -f2); \
+		NEW_MINOR=$$((MINOR + 1)); \
+		NEW_VERSION="$$MAJOR.$$NEW_MINOR.0"; \
+	fi; \
+	echo "Next version: $$NEW_VERSION"; \
+	make tag VERSION=$$NEW_VERSION
+
+release-major: ## Create major release (v1.x.x -> v2.0.0)
+	@echo "$(BLUE)Creating major release...$(NC)"
+	@LATEST=$$(git tag -l "v*.*.*" | sort -V | tail -1); \
+	if [ -z "$$LATEST" ]; then \
+		NEW_VERSION="v1.0.0"; \
+	else \
+		MAJOR=$$(echo $$LATEST | cut -d. -f1 | sed 's/v//'); \
+		NEW_MAJOR=$$((MAJOR + 1)); \
+		NEW_VERSION="v$$NEW_MAJOR.0.0"; \
 	fi; \
 	echo "Next version: $$NEW_VERSION"; \
 	make tag VERSION=$$NEW_VERSION

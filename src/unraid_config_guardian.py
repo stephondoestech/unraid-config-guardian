@@ -40,9 +40,8 @@ def get_containers():
     except Exception as e:
         logging.error(f"Cannot connect to Docker daemon: {e}")
         logging.error("Make sure Docker Socket Proxy is running and accessible")
-        logging.error(
-            f"Current DOCKER_HOST: {os.getenv('DOCKER_HOST', 'tcp://docker-socket-proxy:2375')}"
-        )
+        docker_host_env = os.getenv("DOCKER_HOST", "tcp://docker-socket-proxy:2375")
+        logging.error(f"Current DOCKER_HOST: {docker_host_env}")
         raise
 
     containers = []

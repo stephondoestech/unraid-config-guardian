@@ -1,0 +1,35 @@
+#!/bin/bash
+
+# Pre-push hook to auto-format code before pushing
+# This prevents linting-related commits by fixing formatting issues automatically
+
+echo "🔍 Running pre-push formatting check..."
+
+# Check if we have uncommitted changes
+if ! git diff --quiet || ! git diff --cached --quiet; then
+    echo "⚠️  You have uncommitted changes. Please commit or stash them first."
+    exit 1
+fi
+
+# Run format-fix to clean up any formatting issues
+echo "🔧 Auto-fixing formatting issues..."
+make format-fix
+
+# Check if format-fix made any changes
+if ! git diff --quiet; then
+    echo "✅ Formatting issues were fixed automatically"
+    echo "📝 Staging and committing formatting changes..."
+
+    # Stage the formatting changes
+    git add -A
+
+    # Commit the formatting fixes
+    git commit -m "Auto-fix formatting before push
+
+    echo "✅ Formatting fixes committed successfully"
+else
+    echo "✅ No formatting issues found"
+fi
+
+echo "🚀 Proceeding with push..."
+exit 0
