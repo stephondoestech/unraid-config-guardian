@@ -40,22 +40,19 @@ if [ -d "/boot/config/plugins/dockerMan/templates-user" ]; then
     export TEMPLATES_ACCESSIBLE="true"
     echo "Template directory accessible"
 
-    # Create cache directory for templates
-    mkdir -p /tmp/cached-templates
+    # Create cache directory for templates in /output (persistent location)
+    mkdir -p /output/cached-templates
 
     # Copy all XML templates to cache directory (as root, so we can read them)
     if [ "$(ls -A /boot/config/plugins/dockerMan/templates-user/*.xml 2>/dev/null)" ]; then
-        cp /boot/config/plugins/dockerMan/templates-user/*.xml /tmp/cached-templates/ 2>/dev/null || true
-        template_count=$(ls -1 /tmp/cached-templates/*.xml 2>/dev/null | wc -l)
-        echo "Cached $template_count XML templates"
-        export CACHED_TEMPLATES_DIR="/tmp/cached-templates"
+        cp /boot/config/plugins/dockerMan/templates-user/*.xml /output/cached-templates/ 2>/dev/null || true
+        template_count=$(ls -1 /output/cached-templates/*.xml 2>/dev/null | wc -l)
+        echo "Cached $template_count XML templates to /output/cached-templates"
     else
         echo "No XML templates found in templates-user directory"
-        export CACHED_TEMPLATES_DIR=""
     fi
 else
     export TEMPLATES_ACCESSIBLE="false"
-    export CACHED_TEMPLATES_DIR=""
     echo "Template directory not accessible"
 fi
 
@@ -66,6 +63,10 @@ if [ "$(id -u)" = "0" ] && [ -n "$PUID" ] && [ -n "$PGID" ]; then
     # Change guardian user/group IDs to match Unraid
     groupmod -o -g "$PGID" guardian 2>/dev/null || true
     usermod -o -u "$PUID" guardian 2>/dev/null || true
+
+    # Update sudo rule for template refresh to work with any UID
+    echo "%$PGID ALL=(root) NOPASSWD: /usr/local/bin/refresh-templates.sh" > /etc/sudoers.d/guardian-templates
+    chmod 440 /etc/sudoers.d/guardian-templates
 
     # Ensure proper ownership of key directories
     chown -R guardian:guardian /config /output 2>/dev/null || true

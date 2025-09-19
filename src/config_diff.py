@@ -122,8 +122,9 @@ def compare_single_container(old: Dict, new: Dict) -> List[str]:
             changes.append(f"Added ports: {', '.join(new_ports - old_ports)}")
 
     # Compare volumes (simplified)
-    old_volumes = {v.get("host_path", "") for v in old.get("volumes", [])}
-    new_volumes = {v.get("host_path", "") for v in new.get("volumes", [])}
+    # Volumes are stored as strings like "/host/path:/container/path"
+    old_volumes = set(old.get("volumes", []))
+    new_volumes = set(new.get("volumes", []))
     if old_volumes != new_volumes:
         if old_volumes - new_volumes:
             changes.append(f"Removed volumes: {', '.join(old_volumes - new_volumes)}")
@@ -282,15 +283,38 @@ def create_change_log(output_dir: Path, new_config: Dict[str, Any]) -> Optional[
     # Get previous configuration
     old_config = get_previous_config(output_dir)
 
-    if not old_config:
-        logger.info("ℹ️  No previous backup found - this is the first backup")
-        return None
+    changes_file = output_dir / "changes.log"
 
-    # Generate change log
+    if not old_config:
+        # First backup - create initial change log
+        timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+        container_count = len(new_config.get("containers", []))
+        hostname = new_config.get("system_info", {}).get("hostname", "unknown")
+
+        first_backup_log = f"""# Unraid Config Guardian - Change Log
+
+## Initial Backup - {timestamp}
+
+**Server:** {hostname}
+**Containers:** {container_count}
+
+This is the first backup for this Unraid server. Future backups will show changes compared to this baseline.
+
+### Summary
+- ✅ Initial configuration captured
+- ✅ {container_count} containers documented
+- ✅ System information recorded
+
+Future change logs will appear here when configurations are modified.
+"""
+        changes_file.write_text(first_backup_log)
+        logger.info("✅ Initial change log created: changes.log")
+        return first_backup_log
+
+    # Generate change log for subsequent backups
     change_log = generate_change_log(old_config, new_config)
 
     # Write change log file
-    changes_file = output_dir / "changes.log"
     changes_file.write_text(change_log)
 
     logger.info("✅ Change log created: changes.log")

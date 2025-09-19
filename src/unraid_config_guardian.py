@@ -237,16 +237,28 @@ def get_container_templates():
     """Get XML templates from Unraid's template directory."""
     templates = []
 
-    # Check cached template accessibility first
-    templates_accessible = os.environ.get("TEMPLATES_ACCESSIBLE", "false")
-    if templates_accessible != "true":
-        logging.info("Template directory not accessible - no user templates to backup")
-        return templates
+    # Refresh cached templates before collection (if refresh script exists)
+    refresh_script = Path("/usr/local/bin/refresh-templates.sh")
+    if refresh_script.exists():
+        try:
+            logging.info("🔄 Refreshing template cache...")
+            result = subprocess.run(
+                ["sudo", "/usr/local/bin/refresh-templates.sh"],
+                capture_output=True,
+                text=True,
+                timeout=30,
+            )
+            if result.returncode == 0:
+                logging.info("✅ Template cache refreshed successfully")
+            else:
+                logging.warning(f"Template refresh warning: {result.stderr}")
+        except Exception as e:
+            logging.warning(f"Could not refresh templates: {e}")
 
-    # Use cached templates directory if available (preferred)
-    cached_templates_dir = os.environ.get("CACHED_TEMPLATES_DIR", "")
-    if cached_templates_dir and Path(cached_templates_dir).exists():
-        template_dir = Path(cached_templates_dir)
+    # Use cached templates directory (standard location in /output)
+    cached_templates_dir = Path("/output/cached-templates")
+    if cached_templates_dir.exists():
+        template_dir = cached_templates_dir
         logging.info(f"Using cached templates from: {template_dir}")
     else:
         # Fallback to direct access (may fail due to permissions)
@@ -289,6 +301,18 @@ def create_templates_zip(templates, output_dir):
                     zipf.write(template_path, template["name"])
 
         logging.info(f"Created templates zip: {zip_path}")
+
+        # Clean up cached templates after successful zip creation
+        try:
+            cached_dir = Path("/output/cached-templates")
+            if cached_dir.exists():
+                import shutil
+
+                shutil.rmtree(cached_dir)
+                logging.info("🧹 Cleaned up cached templates directory")
+        except Exception as cleanup_error:
+            logging.warning(f"Could not clean up cached templates: {cleanup_error}")
+
         return zip_path
     except Exception as e:
         logging.error(f"Error creating templates zip: {e}")
