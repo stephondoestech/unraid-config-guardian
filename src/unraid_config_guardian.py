@@ -159,19 +159,24 @@ def generate_compose(containers):
 
 
 def get_system_info():
-    """Get basic system information."""
-    # Try to get Unraid server hostname from mounted /boot directory
+    """Get basic system information using cached boot data when available."""
+    # Get hostname with cached data first, then fallbacks
     hostname = "unknown"
     try:
-        # Try to get hostname from Unraid boot config
-        if Path("/boot/config/ident.cfg").exists():
+        # Strategy 1: Use cached hostname from entrypoint (preferred)
+        cached_hostname = os.environ.get("CACHED_HOSTNAME")
+        if cached_hostname:
+            hostname = cached_hostname
+            logging.info(f"Using cached hostname: {hostname}")
+        # Strategy 2: Try direct boot config access (fallback)
+        elif Path("/boot/config/ident.cfg").exists():
             with open("/boot/config/ident.cfg") as f:
                 for line in f:
                     if line.startswith("NAME="):
                         hostname = line.split("=", 1)[1].strip().strip('"')
                         break
+        # Strategy 3: Try hostname command
         if hostname == "unknown":
-            # Fallback to container hostname
             result = subprocess.run(["hostname"], capture_output=True, text=True)
             hostname = result.stdout.strip() or "unknown"
     except Exception:
@@ -187,10 +192,16 @@ def get_system_info():
         "guardian_version": __version__,
     }
 
-    # Try to get Unraid version from mounted /boot directory
+    # Get Unraid version with cached data first, then fallbacks
     unraid_version = "unknown"
     try:
-        if Path("/boot/changes.txt").exists():
+        # Strategy 1: Use cached version from entrypoint (preferred)
+        cached_version = os.environ.get("CACHED_UNRAID_VERSION")
+        if cached_version:
+            unraid_version = cached_version
+            logging.info(f"Using cached Unraid version: {unraid_version}")
+        # Strategy 2: Try direct boot file access (fallback)
+        elif Path("/boot/changes.txt").exists():
             with open("/boot/changes.txt") as f:
                 first_line = f.readline().strip()
                 # Extract version from "# Version 7.1.4 2025-06-18" format
@@ -199,7 +210,7 @@ def get_system_info():
                     unraid_version = version_part
                     logging.info(f"Found Unraid version: {unraid_version}")
 
-        # Try alternative version file locations
+        # Strategy 3: Try alternative version file locations
         if unraid_version == "unknown" and Path("/boot/config/docker.cfg").exists():
             # Sometimes version info is in docker.cfg
             with open("/boot/config/docker.cfg") as f:
@@ -225,6 +236,13 @@ def get_system_info():
 def get_container_templates():
     """Get XML templates from Unraid's template directory."""
     templates = []
+
+    # Check cached template accessibility first
+    templates_accessible = os.environ.get("TEMPLATES_ACCESSIBLE", "false")
+    if templates_accessible != "true":
+        logging.info("Template directory not accessible - no user templates to backup")
+        return templates
+
     template_dir = Path("/boot/config/plugins/dockerMan/templates-user")
 
     if not template_dir.exists():
