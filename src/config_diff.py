@@ -298,7 +298,8 @@ def create_change_log(output_dir: Path, new_config: Dict[str, Any]) -> Optional[
 **Server:** {hostname}
 **Containers:** {container_count}
 
-This is the first backup for this Unraid server. Future backups will show changes compared to this baseline.
+This is the first backup for this Unraid server. Future backups will show changes compared to this
+baseline.
 
 ### Summary
 - ✅ Initial configuration captured
