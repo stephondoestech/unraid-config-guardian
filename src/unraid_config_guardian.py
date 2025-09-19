@@ -241,7 +241,7 @@ def get_container_templates():
     refresh_script = Path("/usr/local/bin/refresh-templates.sh")
     if refresh_script.exists():
         try:
-            logging.info("🔄 Refreshing template cache...")
+            logging.info("Refreshing template cache...")
             result = subprocess.run(
                 ["sudo", "/usr/local/bin/refresh-templates.sh"],
                 capture_output=True,
@@ -249,7 +249,7 @@ def get_container_templates():
                 timeout=30,
             )
             if result.returncode == 0:
-                logging.info("✅ Template cache refreshed successfully")
+                logging.info("Template cache refreshed successfully")
             else:
                 logging.warning(f"Template refresh warning: {result.stderr}")
         except Exception as e:
@@ -269,8 +269,13 @@ def get_container_templates():
         logging.info("Template directory not found - no user templates to backup")
         return templates
 
+    logging.info(f"Scanning for XML files in: {template_dir}")
+
     try:
-        for xml_file in template_dir.glob("*.xml"):
+        xml_files = list(template_dir.glob("*.xml"))
+        logging.info(f"Found {len(xml_files)} XML files")
+
+        for xml_file in xml_files:
             if xml_file.is_file():
                 templates.append(
                     {
@@ -279,43 +284,76 @@ def get_container_templates():
                         "size": xml_file.stat().st_size,
                     }
                 )
-                logging.info(f"Found template: {xml_file.name}")
+                logging.info(f"Added template: {xml_file.name}")
     except Exception as e:
-        logging.warning(f"Error scanning templates directory: {e}")
+        logging.error(f"Error scanning templates directory: {e}")
 
+    logging.info(f"Total templates collected: {len(templates)}")
     return templates
 
 
 def create_templates_zip(templates, output_dir):
     """Create a zip file containing all XML templates."""
     if not templates:
+        logging.info("No templates provided for zip creation")
         return None
 
     zip_path = output_dir / "container-templates.zip"
+
+    logging.info(f"Creating template zip at: {zip_path}")
+    logging.info(f"Templates to zip: {len(templates)}")
+
+    templates_added = 0
 
     try:
         with zipfile.ZipFile(zip_path, "w", zipfile.ZIP_DEFLATED) as zipf:
             for template in templates:
                 template_path = Path(template["path"])
+                logging.info(
+                    f"Processing template: {template['name']} at {template_path}"
+                )
+
                 if template_path.exists():
-                    zipf.write(template_path, template["name"])
+                    try:
+                        zipf.write(template_path, template["name"])
+                        templates_added += 1
+                        logging.info(f"Added {template['name']} to zip")
+                    except Exception as template_error:
+                        logging.error(
+                            f"Failed to add {template['name']}: {template_error}"
+                        )
+                else:
+                    logging.warning(f"Template file not found: {template_path}")
 
-        logging.info(f"Created templates zip: {zip_path}")
+        if templates_added > 0:
+            logging.info(
+                f"Created templates zip: {zip_path} with {templates_added} templates"
+            )
 
-        # Clean up cached templates after successful zip creation
-        try:
-            cached_dir = Path("/output/cached-templates")
-            if cached_dir.exists():
-                import shutil
+            # Clean up cached templates after successful zip creation
+            try:
+                cached_dir = Path("/output/cached-templates")
+                if cached_dir.exists():
+                    import shutil
 
-                shutil.rmtree(cached_dir)
-                logging.info("🧹 Cleaned up cached templates directory")
-        except Exception as cleanup_error:
-            logging.warning(f"Could not clean up cached templates: {cleanup_error}")
+                    shutil.rmtree(cached_dir)
+                    logging.info("Cleaned up cached templates directory")
+                else:
+                    logging.info("No cached templates directory to clean up")
+            except Exception as cleanup_error:
+                logging.warning(f"Could not clean up cached templates: {cleanup_error}")
 
-        return zip_path
+            return zip_path
+        else:
+            logging.error("No templates were successfully added to zip")
+            # Remove empty zip file
+            if zip_path.exists():
+                zip_path.unlink()
+            return None
+
     except Exception as e:
         logging.error(f"Error creating templates zip: {e}")
+        logging.error(f"Exception type: {type(e).__name__}")
         return None
 
 

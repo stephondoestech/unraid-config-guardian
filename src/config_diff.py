@@ -308,16 +308,27 @@ baseline.
 
 Future change logs will appear here when configurations are modified.
 """
-        changes_file.write_text(first_backup_log)
-        logger.info("✅ Initial change log created: changes.log")
+        try:
+            changes_file.write_text(first_backup_log)
+            logger.info("✅ Initial change log created: changes.log")
+            logger.info(f"Change log written to: {changes_file}")
+        except Exception as e:
+            logger.error(f"❌ Failed to write initial change log: {e}")
+            logger.error(f"Attempted to write to: {changes_file}")
+            return None
         return first_backup_log
 
     # Generate change log for subsequent backups
     change_log = generate_change_log(old_config, new_config)
 
     # Write change log file
-    changes_file.write_text(change_log)
-
-    logger.info("✅ Change log created: changes.log")
+    try:
+        changes_file.write_text(change_log)
+        logger.info("✅ Change log created: changes.log")
+        logger.info(f"Change log written to: {changes_file}")
+    except Exception as e:
+        logger.error(f"❌ Failed to write change log: {e}")
+        logger.error(f"Attempted to write to: {changes_file}")
+        return None
 
     return change_log

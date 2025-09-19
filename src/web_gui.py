@@ -321,7 +321,17 @@ async def run_backup(output_dir: str):
                 },
             }
 
-        # Step 4: Write files
+        # Step 4: Collect templates
+        background_status.update(
+            {"progress": 80, "message": "Collecting XML templates..."}
+        )
+        templates = []
+        if DOCKER_AVAILABLE:
+            from unraid_config_guardian import collect_templates
+
+            templates = collect_templates()
+
+        # Step 5: Write files
         background_status.update({"progress": 90, "message": "Writing backup files..."})
 
         output_path = Path(output_dir)
@@ -330,7 +340,11 @@ async def run_backup(output_dir: str):
         os.chmod(output_path, 0o755)
 
         # Create complete config
-        config = {"system_info": system_info, "containers": containers}
+        config = {
+            "system_info": system_info,
+            "containers": containers,
+            "templates": templates,
+        }
 
         # Write files
         import yaml
@@ -369,6 +383,17 @@ This is a development/demo backup.
 
         # Make restore script executable
         os.chmod(output_path / "restore.sh", 0o755)
+
+        # Create templates zip if templates exist
+        if templates and DOCKER_AVAILABLE:
+            background_status.update(
+                {"progress": 95, "message": "Creating templates zip..."}
+            )
+            from unraid_config_guardian import create_templates_zip
+
+            zip_result = create_templates_zip(templates, output_path)
+            if zip_result:
+                files["container-templates.zip"] = "Binary file"
 
         background_status.update(
             {
