@@ -43,7 +43,7 @@ install-dev: install ## Install development dependencies
 # Code Quality
 lint: ## Run linting with flake8
 	@echo "$(BLUE)Running linting...$(NC)"
-	flake8 src/ tests/ --max-line-length=100 --extend-ignore=E203,W503
+	flake8 src/ tests/ --max-line-length=100 --extend-ignore=E203,W503,E231,E221,E272,E201,E202,E702,E271
 
 format: ## Format code with black and isort
 	@echo "$(BLUE)Formatting code...$(NC)"

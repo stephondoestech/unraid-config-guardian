@@ -521,11 +521,41 @@ def get_last_backup_info():
         try:
             with open(config_file) as f:
                 config = json.load(f)
-            return {
+
+            backup_info = {
                 "timestamp": config.get("system_info", {}).get("timestamp"),
                 "containers": len(config.get("containers", [])),
                 "size": config_file.stat().st_size,
+                "has_changes": False,
+                "changes_summary": "No changes detected",
             }
+
+            # Check for changes.log file
+            changes_file = output_dir / "changes.log"
+            if changes_file.exists():
+                try:
+                    changes_content = changes_file.read_text()
+                    backup_info["has_changes"] = True
+
+                    # Extract summary from changes file
+                    lines = changes_content.split("\n")
+                    for line in lines:
+                        if "changes detected" in line:
+                            backup_info["changes_summary"] = line.strip().replace(
+                                "**", ""
+                            )
+                            break
+                    else:
+                        backup_info[
+                            "changes_summary"
+                        ] = "Changes detected - see changes.log"
+
+                except Exception:
+                    backup_info[
+                        "changes_summary"
+                    ] = "Changes file exists but couldn't be read"
+
+            return backup_info
         except Exception:
             pass
 

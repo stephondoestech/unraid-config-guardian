@@ -19,6 +19,7 @@ from typing import List
 import yaml
 
 import docker
+from config_diff import create_change_log
 from version import __version__
 
 # Removed unused imports: Any, Dict, List
@@ -172,13 +173,14 @@ def get_system_info():
                         break
         if hostname == "unknown":
             # Fallback to container hostname
-            hostname = subprocess.run(
-                ["hostname"], capture_output=True, text=True
-            ).stdout.strip()
+            result = subprocess.run(["hostname"], capture_output=True, text=True)
+            hostname = result.stdout.strip() or "unknown"
     except Exception:
-        hostname = subprocess.run(
-            ["hostname"], capture_output=True, text=True
-        ).stdout.strip()
+        try:
+            result = subprocess.run(["hostname"], capture_output=True, text=True)
+            hostname = result.stdout.strip() or "unknown"
+        except Exception:
+            hostname = "unknown"
 
     info = {
         "timestamp": datetime.now().isoformat(),
@@ -187,6 +189,7 @@ def get_system_info():
     }
 
     # Try to get Unraid version from mounted /boot directory
+    unraid_version = "unknown"
     try:
         if Path("/boot/changes.txt").exists():
             with open("/boot/changes.txt") as f:
@@ -194,13 +197,28 @@ def get_system_info():
                 # Extract version from "# Version 7.1.4 2025-06-18" format
                 if first_line.startswith("# Version "):
                     version_part = first_line.replace("# Version ", "").split()[0]
-                    info["unraid_version"] = version_part
-                else:
-                    info["unraid_version"] = "unknown"
-        else:
-            info["unraid_version"] = "unknown"
-    except Exception:
-        info["unraid_version"] = "unknown"
+                    unraid_version = version_part
+                    logging.info(f"Found Unraid version: {unraid_version}")
+
+        # Try alternative version file locations
+        if unraid_version == "unknown" and Path("/boot/config/docker.cfg").exists():
+            # Sometimes version info is in docker.cfg
+            with open("/boot/config/docker.cfg") as f:
+                content = f.read()
+                if "DOCKER_ENABLED" in content:
+                    logging.info("Detected Unraid system (docker.cfg found)")
+                    unraid_version = (
+                        "Unraid (version detection from /boot/changes.txt failed)"
+                    )
+
+        if unraid_version == "unknown":
+            logging.warning("/boot directory not mounted or accessible")
+
+    except Exception as e:
+        logging.warning(f"Error reading Unraid version: {e}")
+        unraid_version = "unknown"
+
+    info["unraid_version"] = unraid_version
 
     return info
 
@@ -439,6 +457,9 @@ def main():
         # Create complete config
         config = {"system_info": system_info, "containers": containers}
 
+        # Generate change log (compare with previous backup)
+        change_log = create_change_log(output_dir, config)
+
         # Write files
         files = {
             "unraid-config.json": json.dumps(config, indent=2),
@@ -468,6 +489,12 @@ def main():
 
         logger.info(f"🎉 Documentation generated in {output_dir}")
         logger.info(f"📦 Found {len(containers)} containers")
+
+        # Log change summary
+        if change_log:
+            logger.info("📋 Change log generated - see changes.log for details")
+        else:
+            logger.info("📋 First backup - no changes to compare")
 
     except Exception as e:
         logger.error(f"❌ Error generating documentation: {str(e)}")

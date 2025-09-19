@@ -8,15 +8,22 @@ fi
 
 # Handle PUID/PGID for Unraid compatibility (only if running as root)
 if [ "$(id -u)" = "0" ] && [ -n "$PUID" ] && [ -n "$PGID" ]; then
+    echo "Setting up user permissions: PUID=$PUID, PGID=$PGID"
+
     # Change guardian user/group IDs to match Unraid
     groupmod -o -g "$PGID" guardian 2>/dev/null || true
     usermod -o -u "$PUID" guardian 2>/dev/null || true
 
-    # Ensure proper ownership
-    chown -R guardian:guardian /config /output /app 2>/dev/null || true
+    # Ensure proper ownership of key directories
+    chown -R guardian:guardian /config /output 2>/dev/null || true
+
+    echo "User setup complete: guardian user now has UID=$(id -u guardian), GID=$(id -g guardian)"
 elif [ "$(id -u)" != "0" ]; then
     # Running as non-root user, just ensure directories exist
+    echo "Running as non-root user ($(id -u):$(id -g)), ensuring directories exist"
     mkdir -p /config /output 2>/dev/null || true
+else
+    echo "Running as root but no PUID/PGID specified, using default guardian user (1000:1000)"
 fi
 
 # Set up cron job if SCHEDULE is provided

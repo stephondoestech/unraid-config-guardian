@@ -39,12 +39,12 @@ RUN mkdir -p /config /output && \
 COPY docker/entrypoint.sh /entrypoint.sh
 RUN chmod +x /entrypoint.sh
 
-# Run as non-root user for security
-USER guardian
+# Note: Start as root to allow entrypoint.sh to handle PUID/PGID switching
+# The entrypoint will switch to the appropriate user (guardian or PUID/PGID)
 
 # Health check
-HEALTHCHECK --interval=30s --timeout=10s --start-period=5s --retries=3 \
-    CMD python src/health_check.py || exit 1
+HEALTHCHECK --interval=30s --timeout=10s --start-period=30s --retries=3 \
+    CMD cd /app && python src/health_check.py || exit 1
 
 # Expose port for web interface (if implemented)
 EXPOSE 7842

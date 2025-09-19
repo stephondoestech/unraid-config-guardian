@@ -92,7 +92,7 @@ jobs:
           ## Docker Images
           - `${{ env.DOCKER_IMAGE }}:${{ github.ref_name }}`
           - `${{ env.DOCKER_IMAGE }}:latest`
-          
+
           ## Usage
           ```bash
           docker pull ${{ env.DOCKER_IMAGE }}:${{ github.ref_name }}
