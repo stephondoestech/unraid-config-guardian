@@ -327,9 +327,9 @@ async def run_backup(output_dir: str):
         )
         templates = []
         if DOCKER_AVAILABLE:
-            from unraid_config_guardian import collect_templates
+            from unraid_config_guardian import get_container_templates
 
-            templates = collect_templates()
+            templates = get_container_templates()
 
         # Step 5: Write files
         background_status.update({"progress": 90, "message": "Writing backup files..."})
