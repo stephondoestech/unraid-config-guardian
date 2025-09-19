@@ -9,14 +9,25 @@
 [![GitHub release](https://img.shields.io/github/release/stephondoestech/unraid-config-guardian.svg)](https://github.com/stephondoestech/unraid-config-guardian/releases)
 [![License](https://img.shields.io/github/license/stephondoestech/unraid-config-guardian)](LICENSE)
 
-Automatically generate comprehensive disaster recovery documentation for your Unraid setup.
+**Your Unraid flash drive crashed and you don't have a backup?**
+
+This tool saves you from complete disaster by automatically documenting your entire Unraid configuration.
 
 </div>
 
-**Features:**
-- Complete server recreation in under 30 minutes
-- Docker-compose generation from running containers
-- Automated restoration scripts with security-conscious data masking
+## Flash Drive Disaster Recovery
+
+**The Problem:** Your Unraid flash drive dies, taking with it:
+- All Docker container configurations
+- System settings and user shares
+- Plugin configurations and templates
+- Years of careful setup work
+
+**The Solution:** Config Guardian automatically backs up everything needed to rebuild your server:
+- **All running containers** → Docker templates + compose files
+- **System configuration** → Settings, shares, plugins
+- **Complete rebuild guide** → Step-by-step restoration
+- **Change tracking** → See what changed between backups
 
 ## Application
 
@@ -32,15 +43,14 @@ Automatically generate comprehensive disaster recovery documentation for your Un
 
 
 
-## 🚀 Quick Start
+## Emergency Setup (Flash Drive Died)
 
-### Unraid Installation (Recommended)
+### Quick Install on Fresh Unraid
 
-1. **Via Community Apps (Coming Soon):**
-   - Apps → Search → "Config Guardian" → Install
-   - **Required:** Install "dockersocket" from Apps page, add variable `IMAGES=1` (prevents 403 errors)
+1. **Install fresh Unraid** on new hardware/flash drive
+2. **Set up basic array** and enable Docker
+3. **Install Config Guardian:**
 
-2. **Manual Docker Command:**
 ```bash
 # SSH into Unraid and run:
 mkdir -p /mnt/user/appdata/unraid-config-guardian
@@ -54,151 +64,101 @@ docker run -d \
   -v /mnt/user/backups/unraid-docs:/output \
   -v /var/run/docker.sock:/var/run/docker.sock:ro \
   -v /boot:/boot:ro \
-  -e PUID=99 -e PGID=100 -e TZ=America/New_York \
-  -e MASK_PASSWORDS=true \
+  -e PUID=99 -e PGID=100 \
+  -e SCHEDULE="0 2 * * 0" \
   stephondoestech/unraid-config-guardian:latest
 ```
 
-3. **Access Web Interface:** `http://your-unraid-ip:7842`
+4. **Access:** `http://your-unraid-ip:7842`
+5. **Generate backup** to start protecting your new setup
 
-### Development Setup
+### Preventive Setup (Normal Use)
 
-```bash
-# For local development
-git clone https://github.com/stephondoestech/unraid-config-guardian.git
-cd unraid-config-guardian
-make docker-build
-make docker-dev  # Access at http://localhost:7842
-```
+Install via **Community Apps** → Search "Config Guardian" → Install
 
-## 📦 What Gets Generated
+**Pro Tip:** Set up weekly automated backups immediately after configuring any new containers!
+
+## Your Backup Contains Everything Needed
 
 ```
 unraid-backup/
-├── unraid-config.json      # Complete system configuration
-├── docker-compose.yml      # All containers ready for deployment
-├── restore.sh             # Automated restoration script
-├── README.md               # Step-by-step recovery guide
-├── secrets.env.example     # Template for sensitive variables
-└── system-report.html      # Visual documentation dashboard
+├── container-templates.zip # Native Unraid XML templates → Drop in Docker tab
+├── docker-compose.yml      # Emergency fallback containers
+├── unraid-config.json      # System settings, shares, plugins
+├── restore.sh              # Automated restoration script
+├── changes.log             # What changed since last backup
+└── README.md               # Step-by-step recovery guide
 ```
 
-## Disaster Recovery
+**Data Sources:**
+- Running Docker containers (via Docker API)
+- Unraid system configuration (`/boot/config/`)
+- User shares and disk settings
+- Plugin configurations and templates
 
-### Quick Restore Process
+## Super Simple Recovery
 
-1. **Install fresh Unraid** on new hardware
-2. **Set up disk array** and basic configuration
-3. **Navigate to backup location:**
+**When disaster strikes:**
+
+1. **Fresh Unraid install** → Set up array
+2. **Restore from backup:**
    ```bash
    cd /mnt/user/backups/unraid-docs/latest
-   ```
-4. **Run restore script:**
-   ```bash
    bash restore.sh
    ```
-5. **Restore your appdata** from backup
-6. **Verify containers:** `docker-compose ps`
+3. **Add containers:** Docker tab → Your templates are in the dropdown
+4. **Copy back appdata** from your separate backups
 
-### Common Issues
+**That's it!** Your entire server configuration is restored.
 
-- **Missing docker-compose:** Install it first
-- **Permission errors:** Run `chmod +x restore.sh`
-- **Container failures:** Check logs with `docker logs <container>`
-- **Missing passwords:** Edit `secrets.env.example` and save as `.env`
+## IMPORTANT: This is NOT a Data Backup Solution
 
-The generated files contain everything needed to recreate your setup. Store backups offsite and test the restore process!
+**Config Guardian only backs up your CONFIGURATION, not your data.** You still need a proper backup solution for your appdata and media files.
 
-## ✨ Key Features
+**Recommended backup solutions:**
+- **Kopia** - Modern, fast, encrypted backups
+- **Duplicacy** - Web-based backup management
+- **Rustic** - Rust-based restic alternative
+- **Unraid Plugins:** CA Backup/Restore, Appdata Backup
 
-- **Complete Documentation**: Docker containers, network settings, user shares, and plugin configurations
-- **Infrastructure as Code**: Generate docker-compose files and restoration scripts
-- **Security**: Automatic masking of sensitive data with secure credential handling
-- **Automation**: Scheduled backups with cron-based timing and notifications
+**What Config Guardian backs up:**
+- Docker container configurations and templates
+- Unraid system settings and shares
+- Plugin configurations
+- Recovery scripts and documentation
 
-## 📋 Requirements
+**What you still need to backup separately:**
+- `/mnt/user/appdata/` (your container data)
+- `/mnt/user/` (your media and files)
+- Any custom scripts or configurations
 
-- **Unraid 6.9+** with Community Applications plugin
-- **1GB RAM** for container
-- **Docker socket access** (automatic in Unraid)
+## Configuration
 
-## 🔧 Configuration
-
+**Essential Settings:**
 ```bash
-# Essential environment variables
-PUID=99                    # Unraid user ID
-PGID=100                   # Unraid group ID
-TZ=America/New_York        # Timezone
-SCHEDULE=0 2 * * 0         # Weekly backup (Sunday 2 AM)
-MASK_PASSWORDS=true        # Hide sensitive data
+SCHEDULE="0 2 * * 0"       # Weekly backup (Sunday 2 AM)
+PUID=99 PGID=100           # Standard Unraid permissions
+MASK_PASSWORDS=true        # Hide sensitive data in backups
 ```
 
-**Container Paths:**
-- `/mnt/user/appdata/unraid-config-guardian` → `/config`
-- `/mnt/user/backups/unraid-docs` → `/output`
-- `/var/run/docker.sock` → `/var/run/docker.sock:ro`
+**Common Issues:**
+- **No templates in dropdown:** Enable Template Authoring Mode in Docker settings
+- **Permission errors:** See [troubleshooting guide](docs/troubleshooting.md)
 
-## 📖 Usage
+## Manual Usage
 
-### Docker Deployment
 ```bash
-# Quick deployment
-make docker-run
+# Generate backup now
+docker exec unraid-config-guardian python3 src/unraid_config_guardian.py
 
-# Check status
-make docker-logs
+# View logs
+docker logs unraid-config-guardian
 
-# Manual generation
-docker exec unraid-config-guardian python3 src/unraid_config_guardian.py --output /output
+# Check what changed
+cat /mnt/user/backups/unraid-docs/latest/changes.log
 ```
 
-### Local Development
-```bash
-# Run locally
-make run
-
-# With custom output
-python src/unraid_config_guardian.py --output ./backup --debug
-```
-
-### Disaster Recovery
-```bash
-./restore.sh         # Run generated restoration script
-docker-compose ps     # Verify services running
-```
-
-## 🛠️ Development
-
-### Quick Start
-```bash
-# Clone and setup
-git clone https://github.com/stephondoestech/unraid-config-guardian.git
-cd unraid-config-guardian
-make dev-setup
-source venv/bin/activate
-make install-dev
-```
-
-### Available Commands
-```bash
-make help          # Show all available commands
-make run           # Run application locally with debug
-make test          # Run test suite
-make check         # Run linting, type-check, and tests
-make docker-build  # Build Docker image
-make docker-run    # Run with docker-compose
-make clean         # Clean up generated files
-```
-
-### Development Workflow
-```bash
-make format        # Format code with black
-make lint          # Check code style
-make type-check    # Run mypy type checking
-make test-cov      # Run tests with coverage
-```
-
-## 📄 License
+## License
 
 This project is licensed under the **MIT License** - see the [LICENSE](LICENSE) file for details.
 
