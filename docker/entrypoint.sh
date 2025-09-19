@@ -6,6 +6,56 @@ if [ -n "$TZ" ] && [ -w /etc ]; then
     ln -snf /usr/share/zoneinfo/$TZ /etc/localtime && echo $TZ > /etc/timezone
 fi
 
+# Cache Unraid boot information while running as root (before user switching)
+echo "Caching Unraid system information..."
+
+# Try to get hostname from Unraid boot config
+if [ -f "/boot/config/ident.cfg" ]; then
+    CACHED_HOSTNAME=$(grep "NAME=" /boot/config/ident.cfg 2>/dev/null | cut -d= -f2 | tr -d '"' | head -1)
+    if [ -n "$CACHED_HOSTNAME" ]; then
+        export CACHED_HOSTNAME
+        echo "Cached hostname: $CACHED_HOSTNAME"
+    fi
+fi
+
+# Try to get Unraid version from changes.txt
+if [ -f "/boot/changes.txt" ]; then
+    CACHED_UNRAID_VERSION=$(head -1 /boot/changes.txt 2>/dev/null | sed 's/# Version //' | awk '{print $1}')
+    if [ -n "$CACHED_UNRAID_VERSION" ]; then
+        export CACHED_UNRAID_VERSION
+        echo "Cached Unraid version: $CACHED_UNRAID_VERSION"
+    fi
+fi
+
+# Try alternative version detection in docker.cfg
+if [ -z "$CACHED_UNRAID_VERSION" ] && [ -f "/boot/config/docker.cfg" ]; then
+    if grep -q "DOCKER_ENABLED" /boot/config/docker.cfg 2>/dev/null; then
+        export CACHED_UNRAID_VERSION="Unraid (detected)"
+        echo "Cached Unraid version: Unraid (detected from docker.cfg)"
+    fi
+fi
+
+# Cache template directory accessibility and copy templates
+if [ -d "/boot/config/plugins/dockerMan/templates-user" ]; then
+    export TEMPLATES_ACCESSIBLE="true"
+    echo "Template directory accessible"
+
+    # Create cache directory for templates in /output (persistent location)
+    mkdir -p /output/cached-templates
+
+    # Copy all XML templates to cache directory (as root, so we can read them)
+    if [ "$(ls -A /boot/config/plugins/dockerMan/templates-user/*.xml 2>/dev/null)" ]; then
+        cp /boot/config/plugins/dockerMan/templates-user/*.xml /output/cached-templates/ 2>/dev/null || true
+        template_count=$(ls -1 /output/cached-templates/*.xml 2>/dev/null | wc -l)
+        echo "Cached $template_count XML templates to /output/cached-templates"
+    else
+        echo "No XML templates found in templates-user directory"
+    fi
+else
+    export TEMPLATES_ACCESSIBLE="false"
+    echo "Template directory not accessible"
+fi
+
 # Handle PUID/PGID for Unraid compatibility (only if running as root)
 if [ "$(id -u)" = "0" ] && [ -n "$PUID" ] && [ -n "$PGID" ]; then
     echo "Setting up user permissions: PUID=$PUID, PGID=$PGID"
@@ -13,6 +63,10 @@ if [ "$(id -u)" = "0" ] && [ -n "$PUID" ] && [ -n "$PGID" ]; then
     # Change guardian user/group IDs to match Unraid
     groupmod -o -g "$PGID" guardian 2>/dev/null || true
     usermod -o -u "$PUID" guardian 2>/dev/null || true
+
+    # Update sudo rule for template refresh to work with any UID
+    echo "%$PGID ALL=(root) NOPASSWD: /usr/local/bin/refresh-templates.sh" > /etc/sudoers.d/guardian-templates
+    chmod 440 /etc/sudoers.d/guardian-templates
 
     # Ensure proper ownership of key directories
     chown -R guardian:guardian /config /output 2>/dev/null || true

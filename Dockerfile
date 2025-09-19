@@ -18,6 +18,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     curl \
     cron \
     gosu \
+    sudo \
     && rm -rf /var/lib/apt/lists/*
 
 # Set working directory
@@ -35,9 +36,14 @@ COPY templates/ ./templates/
 RUN mkdir -p /config /output && \
     chown -R guardian:guardian /app /config /output
 
-# Copy entrypoint script
+# Copy entrypoint and helper scripts
 COPY docker/entrypoint.sh /entrypoint.sh
-RUN chmod +x /entrypoint.sh
+COPY docker/refresh-templates.sh /usr/local/bin/refresh-templates.sh
+RUN chmod +x /entrypoint.sh /usr/local/bin/refresh-templates.sh
+
+# Configure sudo for template refresh (allow guardian user to run refresh script as root)
+RUN echo "guardian ALL=(root) NOPASSWD: /usr/local/bin/refresh-templates.sh" > /etc/sudoers.d/guardian-templates \
+    && chmod 440 /etc/sudoers.d/guardian-templates
 
 # Note: Start as root to allow entrypoint.sh to handle PUID/PGID switching
 # The entrypoint will switch to the appropriate user (guardian or PUID/PGID)
