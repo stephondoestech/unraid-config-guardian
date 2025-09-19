@@ -42,9 +42,8 @@ def get_containers():
     except Exception as e:
         logging.error(f"Cannot connect to Docker daemon: {e}")
         logging.error("Make sure Docker Socket Proxy is running and accessible")
-        logging.error(
-            f"Current DOCKER_HOST: {os.getenv('DOCKER_HOST', 'tcp://docker-socket-proxy:2375')}"
-        )
+        docker_host_env = os.getenv("DOCKER_HOST", "tcp://docker-socket-proxy:2375")
+        logging.error(f"Current DOCKER_HOST: {docker_host_env}")
         raise
 
     containers = []
@@ -403,7 +402,9 @@ def setup_logging(debug: bool = False, output_dir: str = "/output") -> None:
 
     # Ensure output directory exists
     log_dir = Path(output_dir)
-    log_dir.mkdir(parents=True, exist_ok=True)
+    log_dir.mkdir(parents=True, exist_ok=True, mode=0o755)
+    # Set permissions explicitly for Unraid compatibility
+    os.chmod(log_dir, 0o755)
 
     # Setup handlers
     handlers: List[logging.Handler] = [logging.StreamHandler()]
@@ -436,7 +437,9 @@ def main():
     logger = logging.getLogger(__name__)
 
     output_dir = Path(args.output)
-    output_dir.mkdir(parents=True, exist_ok=True)
+    output_dir.mkdir(parents=True, exist_ok=True, mode=0o755)
+    # Set permissions explicitly for Unraid compatibility
+    os.chmod(output_dir, 0o755)
 
     logger.info("🚀 Generating Unraid documentation...")
 

@@ -325,7 +325,9 @@ async def run_backup(output_dir: str):
         background_status.update({"progress": 90, "message": "Writing backup files..."})
 
         output_path = Path(output_dir)
-        output_path.mkdir(parents=True, exist_ok=True)
+        output_path.mkdir(parents=True, exist_ok=True, mode=0o755)
+        # Set permissions explicitly for Unraid compatibility
+        os.chmod(output_path, 0o755)
 
         # Create complete config
         config = {"system_info": system_info, "containers": containers}

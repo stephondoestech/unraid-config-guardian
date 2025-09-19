@@ -298,7 +298,9 @@ async def run_backup_mock(output_dir: str):
 
         # Create mock backup files
         output_path = Path(output_dir)
-        output_path.mkdir(parents=True, exist_ok=True)
+        output_path.mkdir(parents=True, exist_ok=True, mode=0o755)
+        # Set permissions explicitly for Unraid compatibility
+        os.chmod(output_path, 0o755)
 
         # Mock files
         files = {
