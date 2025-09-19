@@ -243,7 +243,15 @@ def get_container_templates():
         logging.info("Template directory not accessible - no user templates to backup")
         return templates
 
-    template_dir = Path("/boot/config/plugins/dockerMan/templates-user")
+    # Use cached templates directory if available (preferred)
+    cached_templates_dir = os.environ.get("CACHED_TEMPLATES_DIR", "")
+    if cached_templates_dir and Path(cached_templates_dir).exists():
+        template_dir = Path(cached_templates_dir)
+        logging.info(f"Using cached templates from: {template_dir}")
+    else:
+        # Fallback to direct access (may fail due to permissions)
+        template_dir = Path("/boot/config/plugins/dockerMan/templates-user")
+        logging.info("Using direct template directory access")
 
     if not template_dir.exists():
         logging.info("Template directory not found - no user templates to backup")

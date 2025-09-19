@@ -35,12 +35,27 @@ if [ -z "$CACHED_UNRAID_VERSION" ] && [ -f "/boot/config/docker.cfg" ]; then
     fi
 fi
 
-# Cache template directory accessibility
+# Cache template directory accessibility and copy templates
 if [ -d "/boot/config/plugins/dockerMan/templates-user" ]; then
     export TEMPLATES_ACCESSIBLE="true"
     echo "Template directory accessible"
+
+    # Create cache directory for templates
+    mkdir -p /tmp/cached-templates
+
+    # Copy all XML templates to cache directory (as root, so we can read them)
+    if [ "$(ls -A /boot/config/plugins/dockerMan/templates-user/*.xml 2>/dev/null)" ]; then
+        cp /boot/config/plugins/dockerMan/templates-user/*.xml /tmp/cached-templates/ 2>/dev/null || true
+        template_count=$(ls -1 /tmp/cached-templates/*.xml 2>/dev/null | wc -l)
+        echo "Cached $template_count XML templates"
+        export CACHED_TEMPLATES_DIR="/tmp/cached-templates"
+    else
+        echo "No XML templates found in templates-user directory"
+        export CACHED_TEMPLATES_DIR=""
+    fi
 else
     export TEMPLATES_ACCESSIBLE="false"
+    export CACHED_TEMPLATES_DIR=""
     echo "Template directory not accessible"
 fi
 
