@@ -346,6 +346,15 @@ async def run_backup(output_dir: str):
             "templates": templates,
         }
 
+        # Generate change log if available
+        if DOCKER_AVAILABLE:
+            try:
+                from config_diff import create_change_log
+
+                create_change_log(output_path, config)
+            except ImportError:
+                pass
+
         # Write files
         import yaml
 
