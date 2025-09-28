@@ -237,23 +237,57 @@ def get_container_templates():
     """Get XML templates from Unraid's template directory."""
     templates = []
 
-    # Refresh cached templates before collection (if refresh script exists)
+    # Refresh cached templates before collection
+    # Try multiple approaches for running the refresh with elevated privileges
+    refresh_methods = [
+        # Method 1: Try sudo (current approach)
+        ["sudo", "/usr/local/bin/refresh-templates.sh"],
+        # Method 2: Try running directly via docker exec (if available)
+        [
+            "docker",
+            "exec",
+            "--user",
+            "root",
+            os.environ.get("HOSTNAME", "unraid-config-guardian"),
+            "/usr/local/bin/refresh-templates.sh",
+        ],
+        # Method 3: Direct execution (if script is setuid or we have perms)
+        ["/usr/local/bin/refresh-templates.sh"],
+    ]
+
     refresh_script = Path("/usr/local/bin/refresh-templates.sh")
     if refresh_script.exists():
-        try:
-            logging.info("Refreshing template cache...")
-            result = subprocess.run(
-                ["sudo", "/usr/local/bin/refresh-templates.sh"],
-                capture_output=True,
-                text=True,
-                timeout=30,
+        refresh_success = False
+        for i, method in enumerate(refresh_methods, 1):
+            try:
+                logging.info(
+                    f"Attempting template refresh method {i}: {' '.join(method[:2])}..."
+                )
+                result = subprocess.run(
+                    method,
+                    capture_output=True,
+                    text=True,
+                    timeout=30,
+                )
+                if result.returncode == 0:
+                    logging.info(
+                        f"Template cache refreshed successfully using method {i}"
+                    )
+                    refresh_success = True
+                    break
+                else:
+                    logging.debug(f"Method {i} failed: {result.stderr}")
+            except FileNotFoundError:
+                logging.debug(f"Method {i} tool not available")
+                continue
+            except Exception as e:
+                logging.debug(f"Method {i} error: {e}")
+                continue
+
+        if not refresh_success:
+            logging.warning(
+                "All template refresh methods failed - using existing cached templates"
             )
-            if result.returncode == 0:
-                logging.info("Template cache refreshed successfully")
-            else:
-                logging.warning(f"Template refresh warning: {result.stderr}")
-        except Exception as e:
-            logging.warning(f"Could not refresh templates: {e}")
 
     # Use cached templates directory (standard location in /output)
     cached_templates_dir = Path("/output/cached-templates")
