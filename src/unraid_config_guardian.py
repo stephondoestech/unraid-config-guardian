@@ -286,8 +286,58 @@ def get_container_templates():
 
         if not refresh_success:
             logging.warning(
-                "All template refresh methods failed - using existing cached templates"
+                "All template refresh methods failed - attempting entrypoint template caching"
             )
+            # Try to run the template caching portion of entrypoint.sh as root
+            try:
+                entrypoint_template_cache_script = """
+                #!/bin/bash
+                # Cache template directory accessibility and copy templates (from entrypoint.sh)
+                if [ -d "/boot/config/plugins/dockerMan/templates-user" ]; then
+                    echo "Template directory accessible"
+
+                    # Create cache directory for templates in /output (persistent location)
+                    mkdir -p /output/cached-templates
+
+                    # Copy all XML templates to cache directory (as root, so we can read them)
+                    if [ "$(ls -A /boot/config/plugins/dockerMan/templates-user/*.xml \\
+                        2>/dev/null)" ]; then
+                        cp /boot/config/plugins/dockerMan/templates-user/*.xml \\
+                            /output/cached-templates/ 2>/dev/null || true
+                        template_count=$(ls -1 /output/cached-templates/*.xml 2>/dev/null | wc -l)
+                        echo "Cached $template_count XML templates"
+                    else
+                        echo "No XML templates found in templates-user directory"
+                    fi
+                else
+                    echo "Template directory not accessible"
+                fi
+                """
+
+                result = subprocess.run(
+                    ["sudo", "bash", "-c", entrypoint_template_cache_script],
+                    capture_output=True,
+                    text=True,
+                    timeout=30,
+                )
+
+                if result.returncode == 0:
+                    logging.info(
+                        "Successfully refreshed template cache using entrypoint logic"
+                    )
+                    # Check if we actually got templates
+                    cached_dir = Path("/output/cached-templates")
+                    if cached_dir.exists() and list(cached_dir.glob("*.xml")):
+                        logging.info("Template cache now contains XML files")
+                    else:
+                        logging.info("Template cache created but no XML files found")
+                else:
+                    logging.warning(
+                        f"Entrypoint template caching failed: {result.stderr}"
+                    )
+
+            except Exception as e:
+                logging.warning(f"Could not run entrypoint template caching: {e}")
 
     # Use cached templates directory (standard location in /output)
     cached_templates_dir = Path("/output/cached-templates")
@@ -365,13 +415,33 @@ def create_templates_zip(templates, output_dir):
             )
 
             # Clean up cached templates after successful zip creation
+            # Only remove cached templates if we can access the direct boot config path
             try:
                 cached_dir = Path("/output/cached-templates")
-                if cached_dir.exists():
-                    import shutil
+                boot_templates_dir = Path(
+                    "/boot/config/plugins/dockerMan/templates-user"
+                )
 
-                    shutil.rmtree(cached_dir)
-                    logging.info("Cleaned up cached templates directory")
+                if cached_dir.exists():
+                    # Test if we can access the boot config directory before cleaning up cache
+                    try:
+                        if boot_templates_dir.exists() and list(
+                            boot_templates_dir.glob("*.xml")
+                        ):
+                            import shutil
+
+                            shutil.rmtree(cached_dir)
+                            logging.info(
+                                "Cleaned up cached templates directory - boot config accessible"
+                            )
+                        else:
+                            logging.info(
+                                "Keeping cached templates - boot config not accessible"
+                            )
+                    except (PermissionError, OSError):
+                        logging.info(
+                            "Keeping cached templates - no permission to access boot config"
+                        )
                 else:
                     logging.info("No cached templates directory to clean up")
             except Exception as cleanup_error:
