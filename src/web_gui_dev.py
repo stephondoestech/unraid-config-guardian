@@ -5,6 +5,7 @@ Development version of Web GUI that handles Docker connection gracefully
 
 import asyncio
 import json
+import logging
 import os
 import zipfile
 from datetime import datetime
@@ -301,6 +302,25 @@ async def run_backup_mock(output_dir: str):
         output_path.mkdir(parents=True, exist_ok=True, mode=0o755)
         # Set permissions explicitly for Unraid compatibility
         os.chmod(output_path, 0o755)
+
+        # Generate change log if available
+        change_log_content = None
+        try:
+            from config_diff import create_change_log
+
+            logging.info("Generating configuration change log...")
+            config = {"system_info": MOCK_SYSTEM_INFO, "containers": MOCK_CONTAINERS}
+            change_log_content = create_change_log(output_path, config)
+            if change_log_content:
+                logging.info("Change log generated successfully")
+            else:
+                logging.info("No change log generated (first backup or no changes)")
+        except ImportError:
+            logging.warning(
+                "Change log functionality not available (config_diff module not found)"
+            )
+        except Exception as e:
+            logging.error(f"Error generating change log: {e}")
 
         # Mock files
         files = {
