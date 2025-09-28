@@ -5,6 +5,7 @@ FastAPI-based web interface for managing backups
 """
 
 import json
+import logging
 import os
 import zipfile
 from datetime import datetime
@@ -345,6 +346,25 @@ async def run_backup(output_dir: str):
             "containers": containers,
             "templates": templates,
         }
+
+        # Generate change log if available
+        change_log_content = None
+        if DOCKER_AVAILABLE:
+            try:
+                from config_diff import create_change_log
+
+                logging.info("Generating configuration change log...")
+                change_log_content = create_change_log(output_path, config)
+                if change_log_content:
+                    logging.info("Change log generated successfully")
+                else:
+                    logging.info("No change log generated (first backup or no changes)")
+            except ImportError:
+                logging.warning(
+                    "Change log functionality not available (config_diff module not found)"
+                )
+            except Exception as e:
+                logging.error(f"Error generating change log: {e}")
 
         # Write files
         import yaml

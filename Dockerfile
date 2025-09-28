@@ -41,8 +41,10 @@ COPY docker/entrypoint.sh /entrypoint.sh
 COPY docker/refresh-templates.sh /usr/local/bin/refresh-templates.sh
 RUN chmod +x /entrypoint.sh /usr/local/bin/refresh-templates.sh
 
-# Configure sudo for template refresh (allow guardian user to run refresh script as root)
-RUN echo "guardian ALL=(root) NOPASSWD: /usr/local/bin/refresh-templates.sh" > /etc/sudoers.d/guardian-templates \
+# Make refresh script setuid root so it can run with elevated privileges
+# Also configure sudo as backup method
+RUN chmod 4755 /usr/local/bin/refresh-templates.sh \
+    && echo "guardian ALL=(root) NOPASSWD: /usr/local/bin/refresh-templates.sh" > /etc/sudoers.d/guardian-templates \
     && chmod 440 /etc/sudoers.d/guardian-templates
 
 # Note: Start as root to allow entrypoint.sh to handle PUID/PGID switching

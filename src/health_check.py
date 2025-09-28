@@ -11,23 +11,39 @@ from pathlib import Path
 def check_docker_connection():
     """Check if Docker daemon is accessible."""
     try:
-        # Use docker.sock directly to avoid import issues during startup
-        docker_sock = Path("/var/run/docker.sock")
+        # Allow configurable Docker socket path
+        docker_sock_path = os.getenv("DOCKER_SOCK_PATH", "/var/run/docker.sock")
+        docker_sock = Path(docker_sock_path)
+
         if not docker_sock.exists():
-            print("Docker socket not found at /var/run/docker.sock")
+            print(f"Docker socket not found at {docker_sock_path}")
+            print(
+                "Tip: Set DOCKER_SOCK_PATH environment variable if using custom socket location"
+            )
             return False
 
         # Try importing docker library
         import docker
 
-        client = docker.from_env()
+        # Create client with custom socket path if specified
+        if docker_sock_path != "/var/run/docker.sock":
+            client = docker.DockerClient(base_url=f"unix://{docker_sock_path}")
+        else:
+            client = docker.from_env()
+
         client.ping()
+        print(f"Successfully connected to Docker daemon at {docker_sock_path}")
         return True
     except ImportError as e:
         print(f"Docker library not available: {e}")
+        print("This may be normal during container startup")
         return False
     except Exception as e:
         print(f"Docker connection failed: {e}")
+        print(
+            f"Check that Docker socket is mounted and accessible at {docker_sock_path}"
+        )
+        print("Verify container has permission to access Docker socket")
         return False
 
 
