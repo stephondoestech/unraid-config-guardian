@@ -182,7 +182,7 @@ async def list_backups(request: Request):
 
     if output_dir.exists():
         for item in output_dir.iterdir():
-            if item.is_file() and item.suffix in [".json", ".yml", ".sh", ".md"]:
+            if item.is_file():
                 backups.append(
                     {
                         "name": item.name,
