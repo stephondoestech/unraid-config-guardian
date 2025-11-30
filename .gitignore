@@ -56,3 +56,4 @@ docker-compose.override.yml
 !*.example
 !*.template
 CLAUDE.md
+AGENTS.md
