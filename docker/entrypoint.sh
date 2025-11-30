@@ -85,12 +85,12 @@ if [ -n "$SCHEDULE" ]; then
     echo "Setting up cron job with schedule: $SCHEDULE"
     if [ "$(id -u)" = "0" ]; then
         # Running as root, use crontab for guardian user
-        echo "$SCHEDULE cd /app && python src/unraid_config_guardian.py --output /output >> /output/guardian.log 2>&1" | crontab -u guardian - 2>/dev/null || true
+        echo "$SCHEDULE cd /app && python3 src/unraid_config_guardian.py --output /output >> /output/guardian.log 2>&1" | crontab -u guardian - 2>/dev/null || true
         # Start cron in background
         cron & 2>/dev/null || true
     else
         # Running as non-root, use user crontab
-        echo "$SCHEDULE cd /app && python src/unraid_config_guardian.py --output /output >> /output/guardian.log 2>&1" | crontab - 2>/dev/null || true
+        echo "$SCHEDULE cd /app && python3 src/unraid_config_guardian.py --output /output >> /output/guardian.log 2>&1" | crontab - 2>/dev/null || true
     fi
 fi
 
