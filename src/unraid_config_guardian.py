@@ -28,22 +28,42 @@ from version import __version__
 def get_containers():
     """Get all Docker containers and their info."""
     try:
-        # For local testing/CI, use direct Docker socket; for production, use proxy
-        if os.getenv("PYTEST_CURRENT_TEST") or not os.getenv("DOCKER_HOST"):
-            # Local testing - use direct Docker socket
+        # For local testing/CI, use direct Docker socket
+        if os.getenv("PYTEST_CURRENT_TEST"):
             client = docker.from_env()
         else:
-            # Production - use Docker Socket Proxy
-            docker_host = os.getenv("DOCKER_HOST", "tcp://docker-socket-proxy:2375")
-            client = docker.DockerClient(base_url=docker_host)
+            # Priority 1: Use DOCKER_HOST if set (recommended for socket proxy)
+            docker_host = os.getenv("DOCKER_HOST")
+
+            if docker_host:
+                # DOCKER_HOST is set, use it
+                client = docker.DockerClient(base_url=docker_host)
+            else:
+                # Priority 2: Fall back to DOCKER_SOCK_PATH for backward compatibility
+                docker_sock_path = os.getenv("DOCKER_SOCK_PATH")
+
+                if docker_sock_path:
+                    # Legacy variable - use unix socket
+                    client = docker.DockerClient(base_url=f"unix://{docker_sock_path}")
+                else:
+                    # Priority 3: Default to socket proxy
+                    client = docker.DockerClient(
+                        base_url="tcp://docker-socket-proxy:2375"
+                    )
 
         # Test Docker connectivity
         client.ping()
     except Exception as e:
         logging.error(f"Cannot connect to Docker daemon: {e}")
         logging.error("Make sure Docker Socket Proxy is running and accessible")
-        docker_host_env = os.getenv("DOCKER_HOST", "tcp://docker-socket-proxy:2375")
-        logging.error(f"Current DOCKER_HOST: {docker_host_env}")
+        docker_host_env = os.getenv("DOCKER_HOST")
+        docker_sock_path_env = os.getenv("DOCKER_SOCK_PATH")
+        if docker_host_env:
+            logging.error(f"Current DOCKER_HOST: {docker_host_env}")
+        elif docker_sock_path_env:
+            logging.error(f"Current DOCKER_SOCK_PATH: {docker_sock_path_env}")
+        else:
+            logging.error("Using default: tcp://docker-socket-proxy:2375")
         raise
 
     containers = []

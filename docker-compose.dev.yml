@@ -12,6 +12,9 @@ services:
       - PGID=${PGID:-1000}         # Use your local group ID
       - TZ=America/New_York        # Adjust to your timezone
 
+      # Docker connection (uses socket proxy for security)
+      - DOCKER_HOST=tcp://docker-socket-proxy:2375
+
       # Backup configuration
       - SCHEDULE=0 2 * * 0         # Weekly Sunday at 2 AM
       - BACKUP_LOCATION=/output
@@ -56,6 +59,23 @@ services:
       timeout: 10s
       retries: 3
       start_period: 40s
+
+  # Docker Socket Proxy for secure Docker access
+  docker-socket-proxy:
+    image: tecnativa/docker-socket-proxy:latest
+    container_name: docker-socket-proxy
+    restart: unless-stopped
+    environment:
+      - CONTAINERS=1    # Allow container inspection
+      - IMAGES=1        # Allow image inspection
+      - INFO=1          # Allow system info
+      - NETWORKS=1      # Allow network inspection
+      - VOLUMES=1       # Allow volume inspection
+      - POST=0          # Disable container creation/modification
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+    networks:
+      - unraid-guardian
 
 networks:
   unraid-guardian:

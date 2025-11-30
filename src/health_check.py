@@ -11,39 +11,49 @@ from pathlib import Path
 def check_docker_connection():
     """Check if Docker daemon is accessible."""
     try:
-        # Allow configurable Docker socket path
-        docker_sock_path = os.getenv("DOCKER_SOCK_PATH", "/var/run/docker.sock")
-        docker_sock = Path(docker_sock_path)
-
-        if not docker_sock.exists():
-            print(f"Docker socket not found at {docker_sock_path}")
-            print(
-                "Tip: Set DOCKER_SOCK_PATH environment variable if using custom socket location"
-            )
-            return False
-
         # Try importing docker library
         import docker
 
-        # Create client with custom socket path if specified
-        if docker_sock_path != "/var/run/docker.sock":
-            client = docker.DockerClient(base_url=f"unix://{docker_sock_path}")
-        else:
-            client = docker.from_env()
+        # Priority 1: Use DOCKER_HOST if set (recommended for socket proxy)
+        docker_host = os.getenv("DOCKER_HOST")
 
+        if docker_host:
+            # DOCKER_HOST is set, use it directly
+            client = docker.DockerClient(base_url=docker_host)
+            client.ping()
+            print(f"Successfully connected to Docker daemon at {docker_host}")
+            return True
+
+        # Priority 2: Fall back to DOCKER_SOCK_PATH for backward compatibility
+        docker_sock_path = os.getenv("DOCKER_SOCK_PATH")
+
+        if docker_sock_path:
+            # Legacy variable - check if socket file exists
+            docker_sock = Path(docker_sock_path)
+            if not docker_sock.exists():
+                print(f"Docker socket not found at {docker_sock_path}")
+                return False
+
+            client = docker.DockerClient(base_url=f"unix://{docker_sock_path}")
+            client.ping()
+            print(f"Successfully connected to Docker daemon at {docker_sock_path}")
+            return True
+
+        # Priority 3: Default to socket proxy
+        default_host = "tcp://docker-socket-proxy:2375"
+        client = docker.DockerClient(base_url=default_host)
         client.ping()
-        print(f"Successfully connected to Docker daemon at {docker_sock_path}")
+        print(f"Successfully connected to Docker daemon at {default_host}")
         return True
+
     except ImportError as e:
         print(f"Docker library not available: {e}")
         print("This may be normal during container startup")
         return False
     except Exception as e:
         print(f"Docker connection failed: {e}")
-        print(
-            f"Check that Docker socket is mounted and accessible at {docker_sock_path}"
-        )
-        print("Verify container has permission to access Docker socket")
+        print("Tip: Set DOCKER_HOST environment variable to your Docker Socket Proxy")
+        print("Example: DOCKER_HOST=tcp://docker-socket-proxy:2375")
         return False
 
 
