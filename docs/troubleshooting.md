@@ -2,6 +2,8 @@
 
 ## Permission Issues
 
+If the web UI won’t start and logs are empty, check your container template includes `PUID` and `PGID` (e.g., 99/100) and recreate the container so the entrypoint can set permissions.
+
 ### Problem: Container fails to write backup files
 
 **Symptoms:**
@@ -26,6 +28,8 @@ PGID=100   # 'users' group ID
 # Or use your custom user ID
 PUID=1000  # Your user ID
 PGID=1000  # Your group ID
+
+If the web UI won’t start and container logs look empty, update your existing Unraid template to include `PUID` and `PGID` (e.g., 99/100), then recreate/apply the container so the entrypoint can set correct ownership.
 ```
 
 **Docker run example:**

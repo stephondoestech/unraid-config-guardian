@@ -145,6 +145,8 @@ MASK_PASSWORDS=true        # Hide sensitive data in backups
 - **No templates in dropdown:** Enable Template Authoring Mode in Docker settings
 - **Permission errors:** See [troubleshooting guide](docs/troubleshooting.md)
 
+If the web UI won’t start and logs are empty, check your container template includes `PUID` and `PGID` (e.g., 99/100) and recreate the container so the entrypoint can set permissions.
+
 ## Manual Usage
 
 ```bash
