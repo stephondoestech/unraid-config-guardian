@@ -25,7 +25,7 @@ Features:
 Access the web interface at http://your-unraid-ip:7842</Overview>
   <Category>Backup:</Category>
   <WebUI>http://[IP]:[PORT:7842]</WebUI>
-  <TemplateURL/>
+  <TemplateURL>https://raw.githubusercontent.com/ibracorp/unraid-config-guardian/master/unraid-template.xml</TemplateURL>
   <Icon>https://raw.githubusercontent.com/stephondoestech/unraid-config-guardian/main/assets/unraid_guardian_logo_template.png</Icon>
   <ExtraParams/>
   <PostArgs/>

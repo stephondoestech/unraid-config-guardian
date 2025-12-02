@@ -57,6 +57,23 @@ else
 fi
 
 # Handle PUID/PGID for Unraid compatibility (only if running as root)
+# If PUID/PGID are missing, proactively fail with guidance when mounts aren’t writable.
+check_writable_or_fail() {
+    dir="$1"
+    if [ ! -w "$dir" ]; then
+        echo "Permissions error: $dir is not writable."
+        echo "Unraid tip: set PUID/PGID (e.g., 99/100) in your existing container/template or fix share ownership."
+        echo "If your template lacks PUID/PGID fields, update it in Community Apps, then recreate/apply the container."
+        exit 1
+    fi
+}
+
+if [ "$(id -u)" = "0" ] && { [ -z "$PUID" ] || [ -z "$PGID" ]; }; then
+    # Surface a clear error instead of silently failing to start the UI
+    check_writable_or_fail /config
+    check_writable_or_fail /output
+fi
+
 if [ "$(id -u)" = "0" ] && [ -n "$PUID" ] && [ -n "$PGID" ]; then
     echo "Setting up user permissions: PUID=$PUID, PGID=$PGID"
 
