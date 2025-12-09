@@ -1,4 +1,4 @@
-# Unraid Config Guardian Makefile (lean)
+# Unraid Config Guardian Makefile
 
 PYTHON ?= python3
 PIP ?= pip3
