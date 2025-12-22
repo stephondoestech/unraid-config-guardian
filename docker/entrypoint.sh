@@ -85,14 +85,43 @@ if [ -n "$SCHEDULE" ]; then
     echo "Setting up cron job with schedule: $SCHEDULE"
     PYTHON_BIN=$(command -v python3 2>/dev/null || command -v python 2>/dev/null || echo python3)
     echo "Using Python interpreter for cron: $PYTHON_BIN"
+
+    # Docker connection settings for cron-triggered backups
+    CRON_ENV_VARS=""
+    if [ -n "$DOCKER_HOST" ]; then
+        CRON_ENV_VARS="$CRON_ENV_VARS DOCKER_HOST=$DOCKER_HOST"
+    fi
+    if [ -n "$DOCKER_SOCK_PATH" ]; then
+        CRON_ENV_VARS="$CRON_ENV_VARS DOCKER_SOCK_PATH=$DOCKER_SOCK_PATH"
+    fi
+    if [ -n "$DOCKER_TLS_VERIFY" ]; then
+        CRON_ENV_VARS="$CRON_ENV_VARS DOCKER_TLS_VERIFY=$DOCKER_TLS_VERIFY"
+    fi
+    if [ -n "$DOCKER_CERT_PATH" ]; then
+        CRON_ENV_VARS="$CRON_ENV_VARS DOCKER_CERT_PATH=$DOCKER_CERT_PATH"
+    fi
+    CRON_ENV_VARS="${CRON_ENV_VARS#" "}"
+
+    if [ -n "$CRON_ENV_VARS" ]; then
+        echo "Cron Docker env: $CRON_ENV_VARS"
+    else
+        echo "Cron Docker env: none provided (falling back to container defaults)"
+    fi
+
+    CRON_CMD="cd /app &&"
+    if [ -n "$CRON_ENV_VARS" ]; then
+        CRON_CMD="$CRON_CMD $CRON_ENV_VARS"
+    fi
+    CRON_CMD="$CRON_CMD $PYTHON_BIN src/unraid_config_guardian.py --output /output >> /output/guardian.log 2>&1"
+
     if [ "$(id -u)" = "0" ]; then
         # Running as root, use crontab for guardian user
-        echo "$SCHEDULE cd /app && $PYTHON_BIN src/unraid_config_guardian.py --output /output >> /output/guardian.log 2>&1" | crontab -u guardian - 2>/dev/null || true
+        echo "$SCHEDULE $CRON_CMD" | crontab -u guardian - 2>/dev/null || true
         # Start cron in background
         cron & 2>/dev/null || true
     else
         # Running as non-root, use user crontab
-        echo "$SCHEDULE cd /app && $PYTHON_BIN src/unraid_config_guardian.py --output /output >> /output/guardian.log 2>&1" | crontab - 2>/dev/null || true
+        echo "$SCHEDULE $CRON_CMD" | crontab - 2>/dev/null || true
     fi
 fi
 
