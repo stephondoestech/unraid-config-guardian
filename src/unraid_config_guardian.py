@@ -25,7 +25,7 @@ from version import __version__
 # Removed unused imports: Any, Dict, List
 
 
-def get_containers():
+def get_containers(mask_passwords=True):
     """Get all Docker containers and their info."""
     try:
         # For local testing/CI, use direct Docker socket
@@ -126,14 +126,14 @@ def get_containers():
         except (KeyError, AttributeError) as e:
             logging.warning(f"Error getting volumes for {container.name}: {e}")
 
-        # Get environment (mask sensitive data)
+        # Get environment (mask sensitive data if configured)
         try:
             env_vars = container.attrs.get("Config", {}).get("Env") or []
             for env_var in env_vars:
                 if "=" in env_var:
                     key, value = env_var.split("=", 1)
-                    # Simple masking for common sensitive keys
-                    if any(
+                    # Only mask if mask_passwords is enabled
+                    if mask_passwords and any(
                         word in key.lower()
                         for word in ["password", "key", "token", "secret"]
                     ):
@@ -643,10 +643,25 @@ def main():
         "--output", default=os.getenv("OUTPUT_DIR", "/output"), help="Output directory"
     )
     parser.add_argument("--debug", action="store_true", help="Enable debug logging")
+    parser.add_argument(
+        "--mask-passwords",
+        action="store_true",
+        default=os.getenv("MASK_PASSWORDS", "true").lower() in ("true", "1", "yes"),
+        help="Mask sensitive environment variables (default: true)",
+    )
+    parser.add_argument(
+        "--no-mask-passwords",
+        action="store_true",
+        help="Do not mask sensitive environment variables",
+    )
     args = parser.parse_args()
 
     setup_logging(args.debug, args.output)
     logger = logging.getLogger(__name__)
+
+    # Determine masking setting: --no-mask-passwords overrides --mask-passwords
+    mask_passwords = not args.no_mask_passwords and args.mask_passwords
+    logger.info(f"Password masking: {'enabled' if mask_passwords else 'disabled'}")
 
     output_dir = Path(args.output)
     output_dir.mkdir(parents=True, exist_ok=True, mode=0o755)
@@ -658,7 +673,7 @@ def main():
     try:
         # Collect data
         logger.info("📦 Collecting container information...")
-        containers = get_containers()
+        containers = get_containers(mask_passwords=mask_passwords)
 
         logger.info("🖥️  Collecting system information...")
         system_info = get_system_info()

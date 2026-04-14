@@ -78,7 +78,8 @@ def get_containers_safe():
         # Try to import and use real Docker client
         from unraid_config_guardian import get_containers
 
-        return get_containers()
+        mask_passwords = os.getenv("MASK_PASSWORDS", "true").lower() in ("true", "1", "yes")
+        return get_containers(mask_passwords=mask_passwords)
     except Exception as e:
         print(f"Docker not available, using mock data: {e}")
         return MOCK_CONTAINERS
@@ -588,10 +589,12 @@ def main():
     """Run the web server."""
     port = int(os.getenv("WEB_PORT", 7842))
     host = os.getenv("WEB_HOST", "0.0.0.0")
+    mask_passwords = os.getenv("MASK_PASSWORDS", "true").lower() in ("true", "1", "yes")
 
     print("🌐 Starting Unraid Config Guardian Web GUI (Development Mode)")
     print(f"🔗 Access via: http://localhost:{port}")
     print("📋 Note: Using mock data for development")
+    print(f"🔒 MASK_PASSWORDS={'true' if mask_passwords else 'false'}")
 
     uvicorn.run("web_gui_dev:app", host=host, port=port, reload=False, access_log=True)
 

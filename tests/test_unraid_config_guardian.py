@@ -50,6 +50,38 @@ def test_get_containers():
         assert container["environment"]["SECRET_PASSWORD"] == "***MASKED***"
 
 
+def test_get_containers_no_mask():
+    """Test container information extraction without password masking."""
+    with patch("docker.from_env") as mock_docker:
+        # Mock container
+        mock_container = Mock()
+        mock_container.name = "test-container"
+        mock_container.image.tags = ["nginx:latest"]
+        mock_container.status = "running"
+        mock_container.attrs = {
+            "NetworkSettings": {"Ports": {"80/tcp": [{"HostPort": "8080"}]}},
+            "Mounts": [
+                {
+                    "Type": "bind",
+                    "Source": "/host/path",
+                    "Destination": "/container/path",
+                }
+            ],
+            "Config": {"Env": ["TEST_VAR=test_value", "SECRET_PASSWORD=hidden"]},
+        }
+
+        mock_client = Mock()
+        mock_client.containers.list.return_value = [mock_container]
+        mock_docker.return_value = mock_client
+
+        containers = guardian.get_containers(mask_passwords=False)
+
+        assert len(containers) == 1
+        container = containers[0]
+        assert container["environment"]["SECRET_PASSWORD"] == "hidden"
+        assert container["environment"]["TEST_VAR"] == "test_value"
+
+
 def test_generate_compose():
     """Test docker-compose generation."""
     containers = [
