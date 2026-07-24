@@ -51,6 +51,14 @@ docker-compose.override.yml
 *secret*
 *token*
 *api_key*
+# ================================
+#JSK Added 7/24/26 for container binhex-qbittorrentvpn
+# ================================
+*VPN_PASS* 
+*VPN_USER*
+*SOCKS_USER* 
+*SOCKS_PASS*
+# ================================
 
 # But allow example files
 !*.example

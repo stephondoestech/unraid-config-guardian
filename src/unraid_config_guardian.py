@@ -11,6 +11,7 @@ import json
 import logging
 import os
 import subprocess
+import xml.etree.ElementTree as ET
 import zipfile
 from datetime import datetime
 from pathlib import Path
@@ -23,6 +24,20 @@ from config_diff import create_change_log
 from version import __version__
 
 # Removed unused imports: Any, Dict, List
+
+# Keywords used to detect sensitive env vars / template config values that
+# should be masked before writing to backup output. Added vpn_pass/vpn_user/
+# socks_user/socks_pass for binhex-qbittorrentvpn.
+SENSITIVE_ENV_KEYWORDS = [
+    "password",
+    "key",
+    "token",
+    "secret",
+    "vpn_pass",
+    "vpn_user",
+    "socks_user",
+    "socks_pass",
+]
 
 
 def get_containers():
@@ -133,10 +148,7 @@ def get_containers():
                 if "=" in env_var:
                     key, value = env_var.split("=", 1)
                     # Simple masking for common sensitive keys
-                    if any(
-                        word in key.lower()
-                        for word in ["password", "key", "token", "secret"]
-                    ):
+                    if any(word in key.lower() for word in SENSITIVE_ENV_KEYWORDS):
                         value = "***MASKED***"
                     info["environment"][key] = value
         except (KeyError, AttributeError) as e:
@@ -396,6 +408,27 @@ def get_container_templates():
     return templates
 
 
+def mask_template_xml(xml_path: Path) -> bytes:
+    """Mask sensitive <Config> values in an Unraid template XML file.
+
+    Unraid stores each container's configured variables (including
+    credentials like VPN_USER/VPN_PASS) as plain-text <Config> element
+    text in these template files, independent of the live Docker
+    container inspection used by get_containers().
+    """
+    tree = ET.parse(xml_path)
+    root = tree.getroot()
+
+    for config in root.findall("Config"):
+        name = (config.get("Name") or "").lower()
+        target = (config.get("Target") or "").lower()
+        if any(word in name or word in target for word in SENSITIVE_ENV_KEYWORDS):
+            config.text = "***MASKED***"
+
+    xml_bytes: bytes = ET.tostring(root, encoding="utf-8", xml_declaration=True)
+    return xml_bytes
+
+
 def create_templates_zip(templates, output_dir):
     """Create a zip file containing all XML templates."""
     if not templates:
@@ -419,7 +452,15 @@ def create_templates_zip(templates, output_dir):
 
                 if template_path.exists():
                     try:
-                        zipf.write(template_path, template["name"])
+                        try:
+                            masked_xml = mask_template_xml(template_path)
+                            zipf.writestr(template["name"], masked_xml)
+                        except ET.ParseError as parse_error:
+                            logging.warning(
+                                f"Could not parse {template['name']} as XML, "
+                                f"copying without masking: {parse_error}"
+                            )
+                            zipf.write(template_path, template["name"])
                         templates_added += 1
                         logging.info(f"Added {template['name']} to zip")
                     except Exception as template_error:
