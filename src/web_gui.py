@@ -87,24 +87,25 @@ background_status = {
 
 
 def get_containers_safe():
-    """Get containers with fallback to mock data."""
+    """Get containers; mock data is only used when the backend can't be imported."""
     if not DOCKER_AVAILABLE:
         return MOCK_CONTAINERS
     try:
         return get_containers()
     except Exception as e:
-        print(f"Docker not available, using mock data: {e}")
-        return MOCK_CONTAINERS
+        docker_host = os.getenv("DOCKER_HOST", "tcp://docker-socket-proxy:2375")
+        raise RuntimeError(
+            f"Cannot read containers from Docker at {docker_host}: {e}. "
+            "Check DOCKER_HOST and that the socket proxy is reachable "
+            "from this container."
+        ) from e
 
 
 def get_system_info_safe():
-    """Get system info with fallback to mock data."""
+    """Get system info; mock data is only used when the backend can't be imported."""
     if not DOCKER_AVAILABLE:
         return MOCK_SYSTEM_INFO
-    try:
-        return get_system_info()
-    except Exception:
-        return MOCK_SYSTEM_INFO
+    return get_system_info()
 
 
 @app.get("/", response_class=HTMLResponse)
