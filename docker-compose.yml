@@ -19,6 +19,7 @@ services:
       - SCHEDULE=0 2 * * 0         # Weekly Sunday at 2 AM
       - BACKUP_LOCATION=/output
       - MASK_PASSWORDS=true
+      # - MASK_EXTRA_KEYWORDS=rcon,webui_user   # Extra keywords to mask, comma-separated
       - INCLUDE_SYSTEM_INFO=true
       - DEBUG=false
 
