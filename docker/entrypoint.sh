@@ -117,6 +117,12 @@ if [ -n "$SCHEDULE" ]; then
     if [ -n "$DOCKER_CERT_PATH" ]; then
         CRON_ENV_VARS="$CRON_ENV_VARS DOCKER_CERT_PATH=$DOCKER_CERT_PATH"
     fi
+    if [ -n "$MASK_PASSWORDS" ]; then
+        CRON_ENV_VARS="$CRON_ENV_VARS MASK_PASSWORDS=$MASK_PASSWORDS"
+    fi
+    if [ -n "$MASK_EXTRA_KEYWORDS" ]; then
+        CRON_ENV_VARS="$CRON_ENV_VARS MASK_EXTRA_KEYWORDS='$MASK_EXTRA_KEYWORDS'"
+    fi
     CRON_ENV_VARS="${CRON_ENV_VARS#" "}"
 
     if [ -n "$CRON_ENV_VARS" ]; then

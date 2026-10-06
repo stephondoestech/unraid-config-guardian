@@ -139,6 +139,7 @@ unraid-backup/
 SCHEDULE="0 2 * * 0"       # Weekly backup (Sunday 2 AM)
 PUID=99 PGID=100           # Standard Unraid permissions
 MASK_PASSWORDS=true        # Hide sensitive data in backups
+MASK_EXTRA_KEYWORDS=rcon   # Extra comma-separated keywords to mask (optional)
 ```
 
 **Common Issues:**

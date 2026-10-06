@@ -149,6 +149,7 @@ TZ=America/New_York        # Timezone
 # Optional
 SCHEDULE=0 2 * * 0         # Backup schedule (cron)
 MASK_PASSWORDS=true        # Security
+MASK_EXTRA_KEYWORDS=       # Extra comma-separated keywords to mask (e.g. rcon,webui_user)
 INCLUDE_SYSTEM_INFO=true   # System details
 DEBUG=false                # Debug mode
 

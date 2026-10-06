@@ -14,19 +14,22 @@ import subprocess
 import zipfile
 from datetime import datetime
 from pathlib import Path
-from typing import List
+from typing import List, Optional
 
 import yaml
 
 import docker
 from config_diff import create_change_log
+from masking import MASK_VALUE, is_sensitive_key, mask_template_xml, masking_enabled
 from version import __version__
 
 # Removed unused imports: Any, Dict, List
 
 
-def get_containers():
+def get_containers(mask_passwords: Optional[bool] = None):
     """Get all Docker containers and their info."""
+    if mask_passwords is None:
+        mask_passwords = masking_enabled()
     try:
         # For local testing/CI, use direct Docker socket
         if os.getenv("PYTEST_CURRENT_TEST"):
@@ -132,12 +135,8 @@ def get_containers():
             for env_var in env_vars:
                 if "=" in env_var:
                     key, value = env_var.split("=", 1)
-                    # Simple masking for common sensitive keys
-                    if any(
-                        word in key.lower()
-                        for word in ["password", "key", "token", "secret"]
-                    ):
-                        value = "***MASKED***"
+                    if mask_passwords and is_sensitive_key(key):
+                        value = MASK_VALUE
                     info["environment"][key] = value
         except (KeyError, AttributeError) as e:
             logging.warning(f"Error getting environment for {container.name}: {e}")
@@ -166,9 +165,10 @@ def generate_compose(containers):
         if container["volumes"]:
             service["volumes"] = container["volumes"]
 
-        # Only add non-masked environment variables
+        # Masked values become ${VAR} placeholders so they must be supplied on restore
         clean_env = {
-            k: v for k, v in container["environment"].items() if v != "***MASKED***"
+            k: (f"${{{k}}}" if v == MASK_VALUE else v)
+            for k, v in container["environment"].items()
         }
         if clean_env:
             service["environment"] = clean_env
@@ -396,8 +396,24 @@ def get_container_templates():
     return templates
 
 
-def create_templates_zip(templates, output_dir):
+def mask_cached_templates(cached_dir: Path) -> None:
+    """Mask credentials in cached templates kept in /output, dropping unparseable ones."""
+    for xml_file in cached_dir.glob("*.xml"):
+        try:
+            masked_xml = mask_template_xml(xml_file)
+            if masked_xml is None:
+                xml_file.unlink()
+                logging.warning(f"Removed unparseable cached template: {xml_file.name}")
+            else:
+                xml_file.write_bytes(masked_xml)
+        except OSError as e:
+            logging.warning(f"Could not mask cached template {xml_file.name}: {e}")
+
+
+def create_templates_zip(templates, output_dir, mask_passwords: Optional[bool] = None):
     """Create a zip file containing all XML templates."""
+    if mask_passwords is None:
+        mask_passwords = masking_enabled()
     if not templates:
         logging.info("No templates provided for zip creation")
         return None
@@ -419,7 +435,19 @@ def create_templates_zip(templates, output_dir):
 
                 if template_path.exists():
                     try:
-                        zipf.write(template_path, template["name"])
+                        if not mask_passwords:
+                            zipf.write(template_path, template["name"])
+                            templates_added += 1
+                            logging.info(f"Added {template['name']} to zip (unmasked)")
+                            continue
+                        masked_xml = mask_template_xml(template_path)
+                        if masked_xml is None:
+                            logging.error(
+                                f"Skipping {template['name']}: not valid XML, "
+                                "so credentials cannot be masked"
+                            )
+                            continue
+                        zipf.writestr(template["name"], masked_xml)
                         templates_added += 1
                         logging.info(f"Added {template['name']} to zip")
                     except Exception as template_error:
@@ -458,10 +486,14 @@ def create_templates_zip(templates, output_dir):
                             logging.info(
                                 "Keeping cached templates - boot config not accessible"
                             )
+                            if mask_passwords:
+                                mask_cached_templates(cached_dir)
                     except (PermissionError, OSError):
                         logging.info(
                             "Keeping cached templates - no permission to access boot config"
                         )
+                        if mask_passwords:
+                            mask_cached_templates(cached_dir)
                 else:
                     logging.info("No cached templates directory to clean up")
             except Exception as cleanup_error:
@@ -498,12 +530,19 @@ restore_templates() {{
         # Create target directory if it doesn't exist
         mkdir -p /boot/config/plugins/dockerMan/templates-user
 
-        # Extract templates
-        unzip -o container-templates.zip -d /boot/config/plugins/dockerMan/templates-user
+        # Extract templates without overwriting existing ones (backup copies may be masked)
+        unzip -n container-templates.zip -d /boot/config/plugins/dockerMan/templates-user
 
         if [ $? -eq 0 ]; then
             echo "✅ XML templates restored to /boot/config/plugins/dockerMan/templates-user"
             echo "ℹ️  Templates will appear in 'Add Container' dropdown"
+            masked=$(grep -lF '{MASK_VALUE}' \\
+                /boot/config/plugins/dockerMan/templates-user/*.xml 2>/dev/null)
+            if [ -n "$masked" ]; then
+                echo "⚠️  These templates contain masked credentials ({MASK_VALUE})."
+                echo "    Re-enter the real values before starting the containers:"
+                echo "$masked" | sed 's/^/    - /'
+            fi
         else
             echo "❌ Failed to extract templates"
         fi
