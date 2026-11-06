@@ -87,9 +87,10 @@ def get_containers(mask_passwords: Optional[bool] = None):
             except (
                 docker.errors.ImageNotFound,
                 docker.errors.NotFound,
+                docker.errors.APIError,
                 AttributeError,
             ):
-                # Image was deleted or not found, try to get from container attrs
+                # Image deleted, or image API blocked by the socket proxy (IMAGES=0)
                 if hasattr(container, "attrs") and container.attrs.get(
                     "Config", {}
                 ).get("Image"):
