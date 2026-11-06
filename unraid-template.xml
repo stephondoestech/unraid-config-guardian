@@ -43,6 +43,7 @@ Access the web interface at http://your-unraid-ip:7842</Overview>
   <Config Name="Timezone" Target="TZ" Default="America/New_York" Mode="" Description="Timezone for logging" Type="Variable" Display="always" Required="false" Mask="false">America/New_York</Config>
   <Config Name="Backup Schedule" Target="SCHEDULE" Default="0 2 * * 0" Mode="" Description="Cron schedule for automated backups (Sunday 2 AM)" Type="Variable" Display="always" Required="false" Mask="false">0 2 * * 0</Config>
   <Config Name="Mask Passwords" Target="MASK_PASSWORDS" Default="true" Mode="" Description="Hide sensitive environment variables" Type="Variable" Display="always" Required="false" Mask="false">true</Config>
+  <Config Name="Extra Mask Keywords" Target="MASK_EXTRA_KEYWORDS" Default="" Mode="" Description="Extra comma-separated keywords to mask in addition to the built-in list (password, pass, pwd, secret, token, key, vpn_user, socks_user). Example: rcon,webui_user" Type="Variable" Display="advanced" Required="false" Mask="false"></Config>
   <Config Name="Include System Info" Target="INCLUDE_SYSTEM_INFO" Default="true" Mode="" Description="Include system information in backup" Type="Variable" Display="always" Required="false" Mask="false">true</Config>
   <Config Name="DOCKER HOST" Target="DOCKER_HOST" Default="" Mode="" Description="" Type="Variable" Display="always" Required="false" Mask="false">tcp://dockersocket-ip:2375</Config>
   <TailscaleStateDir/>
