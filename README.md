@@ -142,7 +142,18 @@ MASK_PASSWORDS=true        # Hide sensitive data in backups
 MASK_EXTRA_KEYWORDS=rcon   # Extra comma-separated keywords to mask (optional)
 ```
 
+**Credential Masking:**
+
+With `MASK_PASSWORDS=true` (the default), credential values are replaced with `***MASKED***` in:
+- Container environment variables in `unraid-config.json` and `docker-compose.yml` (the compose file uses `${VAR}` placeholders instead)
+- Template `Config` values and `-e`/`--env` flags inside `container-templates.zip`
+
+A variable is masked when its name contains `password`, `passwd`, `secret`, `token` or `key`, uses `pass`/`pwd`/`pw` as a whole word (e.g. `VPN_PASS`), or is `VPN_USER`/`SOCKS_USER`. Anything Unraid itself marks as masked in a template is masked too. Use `MASK_EXTRA_KEYWORDS` to add your own keywords.
+
+Masked values are not recoverable from the backup. On restore, `restore.sh` lists the templates that contain masked values so you can re-enter them. Set `MASK_PASSWORDS=false` to keep real values in the backup, and store it somewhere secure if you do.
+
 **Common Issues:**
+- **Web UI shows a Docker error instead of containers:** Config Guardian can't reach Docker. Check the Docker socket mount (or `DOCKER_HOST` if you use a socket proxy).
 - **No templates in dropdown:** Enable Template Authoring Mode in Docker settings
 - **Permission errors:** See [troubleshooting guide](docs/troubleshooting.md)
 
