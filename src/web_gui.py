@@ -129,7 +129,9 @@ async def dashboard(request: Request):
         stats = {"error": str(e), "status": background_status}
 
     return templates.TemplateResponse(
-        "dashboard.html", {"request": request, "stats": stats}
+        request,
+        "dashboard.html",
+        {"stats": stats},
     )
 
 
@@ -141,12 +143,15 @@ async def containers_page(request: Request):
         system_info = get_system_info_safe()
         stats = {"system_info": system_info}
         return templates.TemplateResponse(
+            request,
             "containers.html",
-            {"request": request, "containers": containers, "stats": stats},
+            {"containers": containers, "stats": stats},
         )
     except Exception as e:
         return templates.TemplateResponse(
-            "error.html", {"request": request, "error": str(e)}
+            request,
+            "error.html",
+            {"error": str(e)},
         )
 
 
@@ -214,7 +219,9 @@ async def list_backups(request: Request):
     stats = {"system_info": system_info}
 
     return templates.TemplateResponse(
-        "backups.html", {"request": request, "backups": backups, "stats": stats}
+        request,
+        "backups.html",
+        {"backups": backups, "stats": stats},
     )
 
 
